@@ -8,7 +8,7 @@ def remove_control_characters(string):
     interfere with XML parser. Destructive."""
     return re.sub(r'[\x00-\x1F]+', '', string)
 
-def et_fromfile(filename):
+def fromfile(filename):
     """
     Instantiates and returns an ElementTree root object from an XML file.
     """
@@ -16,6 +16,8 @@ def et_fromfile(filename):
         xml_string = f.read()
     xml_string = remove_control_characters(xml_string)
     return ET.fromstring(xml_string)
+
+et_fromfile = fromfile
 
 def inspect_root(root):
     print()

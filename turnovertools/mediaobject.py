@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-class MediaObject(MediaObject):
+class MediaObject(object):
     """
     Parent class for all media objects. Not meant to be instantiated directly.
     """
@@ -26,7 +26,7 @@ class MediaObject(MediaObject):
         """
         self.parent = None
         if data is not None:
-            assert isinstance(data, self.wraps_type)
+            assert isinstance(data, self.__wraps_type__)
             self.data = data
         else:
             self.data = self.wraps_type(*self.default_data)

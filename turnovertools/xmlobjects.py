@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
-import xmlparser
+import xml.etree.ElementTree as ET
 
-import mediaobject
+from . import mediaobject
+from . import xmlparser
+
 
 class XMLWrapper(type):
     def __new__(meta, name, bases, class_dict):
@@ -39,9 +41,32 @@ class XMLWrapper(type):
                     found[0].attrib[attrib] = val
         return setter
 
-class XMLEvent(mediaobjects.Event, metaclass=XMLWrapper):
-    __lookup__ = {}
+class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
+    __lookup__ = { 'event_num' : ('.', 'Num'),
+                   'event_type' : ('.', 'Type'), 
+                   'rec_start_tc' :
+                       ('./Master/Start/Timecode/[@Type="TC1"]',), 
+                   'rec_end_tc' : ('./Master/End/Timecode/[@Type="TC1"]',),
+                   'rec_start_frame' : ('./Master/Start/Frame',),
+                   'rec_end_frame' : ('./Master/End/Frame',),
+                   'clip_name' : ('./Source/ClipName',),
+                   'src_mob_id' : ('./Source/MobID',),
+                   'src_start_tc' :
+                       ('./Source/Start/Timecode/[@Type="Start TC"]',),
+                   'src_end_tc' :
+                       ('./Source/End/Timecode/[@Type="Start TC"]',),
+                   'src_start_frame' : ('./Source/Start/Frame',),
+                   'src_end_frame' :  ('./Source/End/Frame',),
+                   'tape_name' : ('./Source/TapeName',) }
     __wraps_type__ = ET.Element
     __default_data__ = ['Event']
 
+    ##
+    # Constructors
+    @classmethod
+    def fromfile(cls, filename):
+        root = xmlparser.fromfile(filename)
+        return cls.wrap_list(root.iter('Event'))
 
+    def _introspect(self):
+        xmlparser.inspect_element(self.data, '', print)
