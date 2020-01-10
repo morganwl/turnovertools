@@ -41,6 +41,9 @@ class XMLWrapper(type):
                     found[0].attrib[attrib] = val
         return setter
 
+class XMLSequence(mediaobject.Sequence, metaclass=XMLWrapper):
+    
+
 class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
     __lookup__ = { 'event_num' : ('.', 'Num'),
                    'event_type' : ('.', 'Type'), 
