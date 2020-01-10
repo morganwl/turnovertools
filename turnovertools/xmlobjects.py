@@ -7,7 +7,15 @@ from . import xmlparser
 
 
 class XMLWrapper(type):
+    """
+    Metaclass to create property attributes based on a lookup table of
+    attribute names and XPath strings. Attribute and path pairs are
+    taken from the __loopup__ class attribute.
+    """
     def __new__(meta, name, bases, class_dict):
+        """
+        Assign getter and setter methods for each entry in __lookup__.
+        """
         lookup = class_dict.get('__lookup__', {})
         for prop, target in lookup.items():
             if prop not in class_dict:
@@ -17,11 +25,16 @@ class XMLWrapper(type):
         return cls
 
     def getmapper(path, attrib=None, attr='text'):
+        """
+        Generate getter method based using ETree XPATH support.
+        """
         def getter(self):
             targets = self.data.findall(path)
             if len(targets) == 0:
                 return None
             if len(targets) > 1:
+                # Path that returns multiple results is poorly formed.
+                # Might need to consider exceptions.
                 raise Exception('Found multiple elements for ' + path)
             if attrib is None:
                 return getattr(targets[0], attr, None)
@@ -68,6 +81,10 @@ class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
     # Constructors
     @classmethod
     def fromfile(cls, filename):
+        """
+        Create a list of XMLEvent objects directly from an XML file,
+        discarding parent objects.
+        """
         root = xmlparser.fromfile(filename)
         return cls.wrap_list(root.iter('Event'))
 
