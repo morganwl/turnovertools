@@ -34,6 +34,7 @@ class TestParseXML(unittest.TestCase):
         
 class TestXMLEvent(unittest.TestCase):
     def setUp(self):
+        print(xmlobjects.XMLEvent.__wraps_type__)
         self.events = xmlobjects.XMLEvent.fromfile(TEST_XML_COMPLEX)
         # self.events[15]._introspect()
 
@@ -84,13 +85,11 @@ class TestXMLSequence(unittest.TestCase):
         self.assertEqual(len(sequences), 1)
         self.assertIsInstance(sequences[0], mediaobject.Sequence)
     
-    # @unittest.skip('pause')
-    def test_create_tracks(self):
+    def test_parse_tracks(self):
         self.assertIsInstance(self.sequence.tracks, list)
         self.assertIsInstance(self.sequence.tracks[0],
                               mediaobject.SequenceTrack)
 
-    # @unittest.skip('Planned feature')
     def test_parse_attributes(self):
         expected_values = { 'date' : 'Oct. 25, 2008',
                             'title' : 'R2-v29_Flattened.NoGroups.Copy.01' }
@@ -98,7 +97,19 @@ class TestXMLSequence(unittest.TestCase):
             self.assertEqual((key, getattr(self.sequence, key)),
                              (key, value))
 
-    # @unittest.skip('Planned feature')
-    def test_iter_tracks(self):
-        for t in self.sequence.tracks:
-            pass
+    def test_iter_sequence(self):
+        for t in self.sequence:
+            self.assertIsInstance(t, mediaobject.SequenceTrack)
+
+    def test_index_sequence(self):
+        self.assertIsInstance(self.sequence[0],
+                              mediaobject.SequenceTrack)
+
+    def test_len_sequence(self):
+        self.assertEqual(len(self.sequence), 4)
+
+    def test_track_order(self):
+        # self.sequence._introspect()
+        tracks_values = [ 'V1', 'V2', 'V3', 'V4' ]
+        for t, name in zip(self.sequence, tracks_values):
+            self.assertEqual(t.track_name, name)

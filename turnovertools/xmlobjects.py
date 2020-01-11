@@ -55,13 +55,22 @@ class XMLWrapper(ABCMeta):
                     found[0].attrib[attrib] = val
         return setter
 
-class XMLTrack(mediaobject.SequenceTrack, metaclass=XMLWrapper):
-    __lookup__ = { 'title' : ('./ListHead/Title',) }
+class XMLObject(object, metaclass=XMLWrapper):
+    __wraps_type__ = ET.Element
+
+    def _introspect(self):
+        xmlparser.inspect_element(self.data, '', print)
+
+
+class XMLTrack(mediaobject.SequenceTrack, XMLObject):
+    __lookup__ = { 'title' : ('./ListHead/Title',),
+                   'track_name' : ('./ListHead/Tracks',),
+                   'framerate': ('./ListHead/EditRate',)}
     __wraps_type__ = ET.Element
     __default_data__ = ['AssembleList']
 
 
-class XMLSequence(mediaobject.Sequence, metaclass=XMLWrapper):
+class XMLSequence(mediaobject.Sequence, XMLObject):
     __lookup__ = { 'date' : ('.', 'Date') }
     __wraps_type__ = ET.Element
     __default_data__ = ['FilmScribeFile']
@@ -86,7 +95,7 @@ class XMLSequence(mediaobject.Sequence, metaclass=XMLWrapper):
         else:
             return None
 
-class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
+class XMLEvent(mediaobject.Event, XMLObject):
     __lookup__ = { 'event_num' : ('.', 'Num'),
                    'event_type' : ('.', 'Type'), 
                    'rec_start_tc' :
@@ -116,6 +125,3 @@ class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
         """
         root = xmlparser.fromfile(filename)
         return cls.wrap_list(root.iter('Event'))
-
-    def _introspect(self):
-        xmlparser.inspect_element(self.data, '', print)

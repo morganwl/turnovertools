@@ -56,10 +56,10 @@ class Sequence(MediaObject, collections.abc.Sequence):
         self.tracks = []
 
     def __getitem__(self, i):
-        return tracks[i]
+        return self.tracks[i]
 
     def __len__(self):
-        return len(tracks)
+        return len(self.tracks)
 
 class SequenceTrack(MediaObject):
     pass
