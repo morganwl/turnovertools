@@ -55,7 +55,8 @@ class XMLWrapper(type):
         return setter
 
 class XMLSequence(mediaobject.Sequence, metaclass=XMLWrapper):
-    
+    def __init__(self, data=None, **kwargs):
+        pass
 
 class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
     __lookup__ = { 'event_num' : ('.', 'Num'),

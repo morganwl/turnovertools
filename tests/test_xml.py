@@ -71,3 +71,9 @@ class TestXMLEvent(unittest.TestCase):
         for key, value in e1_expected_values.items():
             self.assertEqual((key, getattr(e1, key)), (key, value))
 
+
+class TestXMLSequence(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    
