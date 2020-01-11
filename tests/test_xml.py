@@ -10,10 +10,15 @@ MAIN_DIR = os.path.join(TEST_DIR, os.pardir)
 
 sys.path.insert(0, MAIN_DIR)
 
-from turnovertools import xmlparser, xmlobjects
+from turnovertools import xmlparser, xmlobjects, mediaobject
 
 TEST_FILES = os.path.join(TEST_DIR, 'test_files')
 TEST_XML_COMPLEX = os.path.join(TEST_FILES, 'R2-v29_Flattened.xml')
+
+def has_attrs_with_matching_values(mob, expected_attr_values):
+    for key, value in expected_attr_values.items():
+        if (key, getattr(mob, key)) != (key, value):
+            return False
 
 class TestOpenXML(unittest.TestCase):
     def setUp(self):
@@ -26,17 +31,11 @@ class TestParseXML(unittest.TestCase):
     def setUp(self):
         self.root = xmlparser.fromfile(TEST_XML_COMPLEX)
         # xmlparser.inspect_root(self.root)
-
-def has_attrs_with_matching_values(mob, expected_attr_values):
-    for key, value in expected_attr_values.items():
-        if (key, getattr(mob, key)) != (key, value):
-            return False
-        
         
 class TestXMLEvent(unittest.TestCase):
     def setUp(self):
         self.events = xmlobjects.XMLEvent.fromfile(TEST_XML_COMPLEX)
-        self.events[15]._introspect()
+        # self.events[15]._introspect()
 
     def test_parse_attributes(self):
         e0 = self.events[0]
@@ -74,6 +73,32 @@ class TestXMLEvent(unittest.TestCase):
 
 class TestXMLSequence(unittest.TestCase):
     def setUp(self):
-        pass
+        self.sequence = xmlobjects.XMLSequence.fromfile(TEST_XML_COMPLEX)[0]
 
+    def test_XMLSequence_fromfile(self):
+        """Class method fromfile(filepath) of XMLSequence should create a
+        list containing one valid Sequence object."""
+        # root = xmlparser.fromfile(TEST_XML_COMPLEX)
+        # xmlparser.inspect_root(root)
+        sequences = xmlobjects.XMLSequence.fromfile(TEST_XML_COMPLEX)
+        self.assertEqual(len(sequences), 1)
+        self.assertIsInstance(sequences[0], mediaobject.Sequence)
     
+    # @unittest.skip('pause')
+    def test_create_tracks(self):
+        self.assertIsInstance(self.sequence.tracks, list)
+        self.assertIsInstance(self.sequence.tracks[0],
+                              mediaobject.SequenceTrack)
+
+    # @unittest.skip('Planned feature')
+    def test_parse_attributes(self):
+        expected_values = { 'date' : 'Oct. 25, 2008',
+                            'title' : 'R2-v29_Flattened.NoGroups.Copy.01' }
+        for key, value in expected_values.items():
+            self.assertEqual((key, getattr(self.sequence, key)),
+                             (key, value))
+
+    # @unittest.skip('Planned feature')
+    def test_iter_tracks(self):
+        for t in self.sequence.tracks:
+            pass

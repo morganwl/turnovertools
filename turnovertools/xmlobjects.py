@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+from abc import ABCMeta
 import xml.etree.ElementTree as ET
 
 from . import mediaobject
 from . import xmlparser
 
 
-class XMLWrapper(type):
+class XMLWrapper(ABCMeta):
     """
     Metaclass to create property attributes based on a lookup table of
     attribute names and XPath strings. Attribute and path pairs are
@@ -54,9 +55,36 @@ class XMLWrapper(type):
                     found[0].attrib[attrib] = val
         return setter
 
+class XMLTrack(mediaobject.SequenceTrack, metaclass=XMLWrapper):
+    __lookup__ = { 'title' : ('./ListHead/Title',) }
+    __wraps_type__ = ET.Element
+    __default_data__ = ['AssembleList']
+
+
 class XMLSequence(mediaobject.Sequence, metaclass=XMLWrapper):
+    __lookup__ = { 'date' : ('.', 'Date') }
+    __wraps_type__ = ET.Element
+    __default_data__ = ['FilmScribeFile']
+
     def __init__(self, data=None, **kwargs):
-        pass
+        super(XMLSequence, self).__init__(data=data, **kwargs)
+        self.tracks = XMLTrack.wrap_list(self.data.iter('AssembleList'))
+
+    ##
+    # Constructors
+    @classmethod
+    def fromfile(cls, filename):
+        root = xmlparser.fromfile(filename)
+        return cls.wrap_list([root])
+
+    ##
+    # Properties
+    @property
+    def title(self):
+        if(len(self.tracks) > 0):
+            return self.tracks[0].title
+        else:
+            return None
 
 class XMLEvent(mediaobject.Event, metaclass=XMLWrapper):
     __lookup__ = { 'event_num' : ('.', 'Num'),

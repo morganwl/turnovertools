@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from abc import ABCMeta
+import collections.abc
+
 class MediaObject(object):
     """
     Parent class for all media objects. Not meant to be instantiated directly.
@@ -29,7 +32,7 @@ class MediaObject(object):
             assert isinstance(data, self.__wraps_type__)
             self.data = data
         else:
-            self.data = self.wraps_type(*self.default_data)
+            self.data = self.__wraps_type__(*self.default_data)
         for key, val in kwargs.items():
             if key in self.__requires_properties__:
                 setattr(self, key, val)
@@ -47,8 +50,16 @@ class MediaObject(object):
     def _on_update(self, key, value):
         pass
 
-class Sequence(MediaObject):
-    pass
+class Sequence(MediaObject, collections.abc.Sequence):
+    def __init__(self, data=None, **kwargs):
+        super(Sequence, self).__init__(data=data, **kwargs)
+        self.tracks = []
+
+    def __getitem__(self, i):
+        return tracks[i]
+
+    def __len__(self):
+        return len(tracks)
 
 class SequenceTrack(MediaObject):
     pass
@@ -77,7 +88,7 @@ class SourceClip(MediaObject):
 class Bin(MediaObject):
     pass
 
-class DictWrapperMeta(type):
+class DictWrapperMeta(ABCMeta):
     def __new__(meta, name, bases, class_dict):
         lookup = class_dict.get('__lookup__', {})
         for prop, target in lookup.items():
