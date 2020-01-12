@@ -116,7 +116,8 @@ class XMLEvent(mediaobject.Event, XMLObject):
                        ('./Source/End/Timecode/[@Type="Start TC"]',),
                    'src_start_frame' : ('./Source/Start/Frame',),
                    'src_end_frame' :  ('./Source/End/Frame',),
-                   'tape_name' : ('./Source/TapeName',) }
+                   'tape_name' : ('./Source/TapeName',),
+                   'source_file' : ('./Source/SourceFile',)}
     __wraps_type__ = ET.Element
     __default_data__ = ['Event']
 

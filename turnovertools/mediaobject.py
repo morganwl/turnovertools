@@ -90,6 +90,18 @@ class Event(MediaObject):
     def posterframes(self, val):
         self._posterframes = val;
 
+    @property
+    def reel(self):
+        if self.tape_name is not None:
+            return self.tape_name
+        return self.source_file
+
+    @reel.setter
+    def reel(self, val):
+        if self.source_file is not None:
+            self.source_file = val
+        self.tape_name = val
+
 class SourceClip(MediaObject):
     pass
 

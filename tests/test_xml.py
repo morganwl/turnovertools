@@ -85,6 +85,14 @@ class TestXMLEvent(unittest.TestCase):
             with self.subTest(i=i):
                 self.assertIsInstance(e.parent, mediaobject.SequenceTrack)
 
+    def test_get_reel(self):
+        for i, e in enumerate(self.events):
+            with self.subTest(i=i):
+                if e.tape_name is None:
+                    reel = e.source_file
+                else:
+                    reel = e.tape_name
+                self.assertEqual(e.reel, reel)
 
 class TestXMLSequence(unittest.TestCase):
     def setUp(self):
