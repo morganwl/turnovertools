@@ -69,6 +69,10 @@ class XMLTrack(mediaobject.SequenceTrack, XMLObject):
     __wraps_type__ = ET.Element
     __default_data__ = ['AssembleList']
 
+    def __init__(self, data=None, **kwargs):
+        super(XMLTrack, self).__init__(data=data, **kwargs)
+        self.events = XMLEvent.wrap_list(self.data.iter('Event'))
+
 
 class XMLSequence(mediaobject.Sequence, XMLObject):
     __lookup__ = { 'date' : ('.', 'Date') }

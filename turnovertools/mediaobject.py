@@ -61,8 +61,16 @@ class Sequence(MediaObject, collections.abc.Sequence):
     def __len__(self):
         return len(self.tracks)
 
-class SequenceTrack(MediaObject):
-    pass
+class SequenceTrack(MediaObject, collections.abc.Sequence):
+    def __init__(self, data=None, **kwargs):
+        super(SequenceTrack, self).__init__(data=data, **kwargs)
+        self.events = []
+
+    def __getitem__(self, i):
+        return self.events[i]
+
+    def __len__(self):
+        return len(self.events)
 
 class Event(MediaObject):
     __requires_properties__ = ['clip_name']

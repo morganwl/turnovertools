@@ -34,9 +34,9 @@ class TestParseXML(unittest.TestCase):
         
 class TestXMLEvent(unittest.TestCase):
     def setUp(self):
-        print(xmlobjects.XMLEvent.__wraps_type__)
-        self.events = xmlobjects.XMLEvent.fromfile(TEST_XML_COMPLEX)
-        # self.events[15]._introspect()
+        sequence = xmlobjects.XMLSequence.fromfile(TEST_XML_COMPLEX)[0]
+        track1 = sequence[0]
+        self.events = track1.events
 
     def test_parse_attributes(self):
         e0 = self.events[0]
@@ -113,3 +113,39 @@ class TestXMLSequence(unittest.TestCase):
         tracks_values = [ 'V1', 'V2', 'V3', 'V4' ]
         for t, name in zip(self.sequence, tracks_values):
             self.assertEqual(t.track_name, name)
+
+class TestXMLTrack(unittest.TestCase):
+    def setUp(self):
+        self.sequence = xmlobjects.XMLSequence.fromfile(TEST_XML_COMPLEX)[0]
+        self.track1 = self.sequence[0]
+        self.track2 = self.sequence[1]
+        self.track3 = self.sequence[2]
+        self.track4 = self.sequence[3]
+
+    def test_parse_attributes(self):
+        # self.track1._introspect()
+        t1 = self.track1
+        t1_expected_values = { 
+            'title' : 'R2-v29_Flattened.NoGroups.Copy.01',
+            'track_name' : 'V1',
+            'framerate' : '24'
+        }
+        for key, value in t1_expected_values.items():
+            self.assertEqual( (key, getattr(t1, key)),
+                              (key, value))
+        
+    def test_parse_events(self):
+        t1 = self.track1
+        self.assertIsInstance(t1.events, list)
+        self.assertIsInstance(t1.events[0], mediaobject.Event)
+
+    def test_iter_track(self):
+        for e in self.track1:
+            self.assertIsInstance(e, mediaobject.Event)
+
+    def test_index_track(self):
+        self.assertIsInstance(self.track1[0],
+                              mediaobject.Event)
+
+    def test_len_track(self):
+        self.assertEqual(len(self.track1), 273)
