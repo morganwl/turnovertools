@@ -7,13 +7,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="turnovertools-morgan",
-    version="0.0.1",
+    version="0.0.2",
     author="Morgan Wajda-Levie",
     author_email="morgan.wajdalevie@gmail.com",
     description="Tools for processing Avid Media Composer turnovers.",
     long_description=long_description,
     long_desription_content_type="text/markdown",
     url="https://github.com/morganwl/turnovertools/",
+    scripts=['scripts/xml2ryg.py'],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
