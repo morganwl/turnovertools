@@ -12,22 +12,22 @@ class MediaObject(object):
     __requires_properties__ = []
 
     @classmethod
-    def wrap_list(cls, data_list):
+    def wrap_list(cls, data_list, parent=None, **kwargs):
         """
         Wraps a list of data objects using the given MediaObject child
         class, returning them in a new list.
         """
         mob_list = []
         for d in data_list:
-            mob_list.append(cls(d))
+            mob_list.append(cls(d, parent=parent, **kwargs))
         return mob_list
 
-    def __init__(self, data=None, **kwargs):
+    def __init__(self, data=None, parent=None, **kwargs):
         """
         Instantiate MediaObject with a new data object, or with
         kwargs.
         """
-        self.parent = None
+        self.parent = parent
         if data is not None:
             assert isinstance(data, self.__wraps_type__)
             self.data = data

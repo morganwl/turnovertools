@@ -80,6 +80,11 @@ class TestXMLEvent(unittest.TestCase):
             self.assertIsInstance(c, tuple)
         self.assertEqual(e1.get_custom('Link'), 'AE Composition')
 
+    def test_get_parent(self):
+        for i, e in enumerate(self.events):
+            with self.subTest(i=i):
+                self.assertIsInstance(e.parent, mediaobject.SequenceTrack)
+
 
 class TestXMLSequence(unittest.TestCase):
     def setUp(self):

@@ -70,7 +70,8 @@ class XMLTrack(mediaobject.SequenceTrack, XMLObject):
 
     def __init__(self, data=None, **kwargs):
         super(XMLTrack, self).__init__(data=data, **kwargs)
-        self.events = XMLEvent.wrap_list(self.data.iter('Event'))
+        self.events = XMLEvent.wrap_list(
+            self.data.iter('Event'), parent=self)
 
 
 class XMLSequence(mediaobject.Sequence, XMLObject):
@@ -80,7 +81,8 @@ class XMLSequence(mediaobject.Sequence, XMLObject):
 
     def __init__(self, data=None, **kwargs):
         super(XMLSequence, self).__init__(data=data, **kwargs)
-        self.tracks = XMLTrack.wrap_list(self.data.iter('AssembleList'))
+        self.tracks = XMLTrack.wrap_list(
+            self.data.iter('AssembleList'), parent=self)
 
     ##
     # Constructors
