@@ -15,10 +15,12 @@ from turnovertools import xmlparser, xmlobjects, mediaobject
 TEST_FILES = os.path.join(TEST_DIR, 'test_files')
 TEST_XML_COMPLEX = os.path.join(TEST_FILES, 'R2-v29_Flattened.xml')
 
+
 def has_attrs_with_matching_values(mob, expected_attr_values):
     for key, value in expected_attr_values.items():
         if (key, getattr(mob, key)) != (key, value):
             return False
+
 
 class TestOpenXML(unittest.TestCase):
     def setUp(self):
@@ -27,10 +29,11 @@ class TestOpenXML(unittest.TestCase):
     def test_open_xml(self):
         self.assertIsNotNone(xmlparser.fromfile(TEST_XML_COMPLEX))
 
+
 class TestParseXML(unittest.TestCase):
     def setUp(self):
         self.root = xmlparser.fromfile(TEST_XML_COMPLEX)
-        # xmlparser.inspect_root(self.root)
+
         
 class TestXMLEvent(unittest.TestCase):
     def setUp(self):
@@ -71,6 +74,12 @@ class TestXMLEvent(unittest.TestCase):
         for key, value in e1_expected_values.items():
             self.assertEqual((key, getattr(e1, key)), (key, value))
 
+    def test_get_custom(self):
+        e1 = self.events[15] # this event has custom attributes
+        for c in e1.customs():
+            self.assertIsInstance(c, tuple)
+        self.assertEqual(e1.get_custom('Link'), 'AE Composition')
+
 
 class TestXMLSequence(unittest.TestCase):
     def setUp(self):
@@ -94,8 +103,8 @@ class TestXMLSequence(unittest.TestCase):
         expected_values = { 'date' : 'Oct. 25, 2008',
                             'title' : 'R2-v29_Flattened.NoGroups.Copy.01' }
         for key, value in expected_values.items():
-            self.assertEqual((key, getattr(self.sequence, key)),
-                             (key, value))
+            with self.subTest(key=key):
+                self.assertEqual(getattr(self.sequence, key), value)
 
     def test_iter_sequence(self):
         for t in self.sequence:
@@ -114,6 +123,7 @@ class TestXMLSequence(unittest.TestCase):
         for t, name in zip(self.sequence, tracks_values):
             self.assertEqual(t.track_name, name)
 
+
 class TestXMLTrack(unittest.TestCase):
     def setUp(self):
         self.sequence = xmlobjects.XMLSequence.fromfile(TEST_XML_COMPLEX)[0]
@@ -123,7 +133,6 @@ class TestXMLTrack(unittest.TestCase):
         self.track4 = self.sequence[3]
 
     def test_parse_attributes(self):
-        # self.track1._introspect()
         t1 = self.track1
         t1_expected_values = { 
             'title' : 'R2-v29_Flattened.NoGroups.Copy.01',

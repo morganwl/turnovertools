@@ -6,7 +6,6 @@ import xml.etree.ElementTree as ET
 from . import mediaobject
 from . import xmlparser
 
-
 class XMLWrapper(ABCMeta):
     """
     Metaclass to create property attributes based on a lookup table of
@@ -65,7 +64,7 @@ class XMLObject(object, metaclass=XMLWrapper):
 class XMLTrack(mediaobject.SequenceTrack, XMLObject):
     __lookup__ = { 'title' : ('./ListHead/Title',),
                    'track_name' : ('./ListHead/Tracks',),
-                   'framerate': ('./ListHead/EditRate',)}
+                   'framerate' : ('./ListHead/EditRate',)}
     __wraps_type__ = ET.Element
     __default_data__ = ['AssembleList']
 
@@ -129,3 +128,15 @@ class XMLEvent(mediaobject.Event, XMLObject):
         """
         root = xmlparser.fromfile(filename)
         return cls.wrap_list(root.iter('Event'))
+    
+    def customs(self):
+        for c in self.data.findall('./Source/Custom'):
+            name = c.get('Name')
+            value = c.text
+            yield (name, value)
+
+    def get_custom(self, custom):
+        for name, value in self.customs():
+            if name == custom:
+                return value
+        return None
