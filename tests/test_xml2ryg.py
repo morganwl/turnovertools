@@ -52,7 +52,15 @@ class TestXml2rygInternals(unittest.TestCase):
                 with self.subTest(i=i):
                     self.fail('Expected filler event not marked as filler.')
 
+    @unittest.skip('Feature postponed')
     def test_compare_existing(self):
+        self.fail('Unwritten test.')
+
+    def test_guess_metadata(self):
+        for e in self.events:
+            xml2ryg.guess_metadata(e)
+
+    def test_include_update_sheet(self):
         self.fail('Unwritten test.')
 
     def test_csv_output(self):
