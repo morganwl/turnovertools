@@ -117,7 +117,7 @@ class XMLEvent(mediaobject.Event, XMLObject):
                    'src_start_frame' : ('./Source/Start/Frame',),
                    'src_end_frame' :  ('./Source/End/Frame',),
                    'tape_name' : ('./Source/TapeName',),
-                   'source_file' : ('./Source/SourceFile',)}
+                   'source_file' : ('./Source/SourceFile',), }
     __wraps_type__ = ET.Element
     __default_data__ = ['Event']
 
@@ -143,3 +143,21 @@ class XMLEvent(mediaobject.Event, XMLObject):
             if name == custom:
                 return value
         return None
+
+    def set_custom(self, name, val):
+        customs = self.data.findall('./Source/Custom')
+        custom = None
+        for c in customs:
+            if c.get('Name') == name:
+                custom = c
+        if custom is None:
+            custom = ET.SubElement(self._source, 'Custom')
+            custom.attrib['Name'] = name
+        custom.text = val
+
+    @property
+    def _source(self):
+        source = self.data.find('Source')
+        if source is None:
+            source = ET.SubElement(self.data, 'Source')
+        return source
