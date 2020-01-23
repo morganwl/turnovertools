@@ -60,6 +60,7 @@ class TestXml2rygInternals(unittest.TestCase):
         for e in self.events:
             xml2ryg.guess_metadata(e)
 
+    @unittest.skip('Feature postponed')
     def test_include_update_sheet(self):
         self.fail('Unwritten test.')
 
