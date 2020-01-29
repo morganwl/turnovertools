@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import csv
 from itertools import chain
 import os
 import re
@@ -7,8 +8,22 @@ import sys
 
 from turnovertools import xmlobjects
 
+class Config(object):
+    OUTPUT_COLUMNS = ['event_num', 'clip_name', 'reel', 'Link',
+                      'Footage Type', 'Footage Source', 'rec_start_tc',
+                      'rec_end_tc', 'src_start_tc', 'src_end_tc']
+    
 ##
 # Event processing functions
+def process_events(events):
+    for e in events:
+        if e.reel is None:
+            events.remove(e)
+            continue
+        guess_metadata(e)
+    for i, e in enumerate(events):
+        set_event_num(e, i+1)
+    return events
 
 def remove_filler(e):
     if e.reel is None:
@@ -26,6 +41,9 @@ def guess_metadata(e):
     if e.get_custom('Link') is None:
         e.set_custom('Link', guess_link(e))
     return e
+
+def set_event_num(e, i):
+    e.event_num = str(i)
 
 ##
 # Guessing functions
@@ -48,8 +66,43 @@ def sort_by_tc(events):
     events.sort(key=lambda e: (e.rec_start_tc, e.parent.track_name))
     return events
 
-def main(**kwargs):
-    pass
+##
+# Output functions
+
+def output_csv(events, columns, csvfile):
+    writer = csv.writer(csvfile)
+    
+    # Mock output
+    writer.writerow(columns)
+    
+    columns = Config.OUTPUT_COLUMNS
+    for e in events:
+        row = []
+        for col in columns:
+            if hasattr(e, col):
+                val = getattr(e, col, None)
+            else:
+                val = e.get_custom(col)
+            row.append(val)
+        writer.writerow(row)
+
+##
+# Main function
+
+def main(inputfile, outputfile=None, **kwargs):
+    # output_columns = Config.OUTPUT_COLUMNS
+    output_columns = ['Event Number', 'Clip Name' , 'Tape Name',
+                      'Link', 'Footage Type',
+                      'Footage Source', 'Rec Start',
+                      'Rec End', 'Source Start',
+                      'Source End']
+
+    events = events_from_xml(inputfile)
+    sort_by_tc(events)
+    process_events(events)
+
+    with open(outputfile, 'wt', newline='') as csvfile:
+        output_csv(events, output_columns, csvfile)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
