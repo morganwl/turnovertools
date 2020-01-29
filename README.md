@@ -6,7 +6,16 @@ tools for processing Avid Media Composer turnovers
 ### 0.0.2 - 01.29.2019
 
 - Planned features
-  
+  - xml2ryg
+    - output CSV per ryg specs
+	  - include sequence number in timecode order
+	- output post-frames for each event
+	  - output names should match sequence number of csv event
+	- output video for each event
+
+- Stretch
+  - Explore using MobID in XML to find source media on drive
+  - Add AAF support
 
 ### 0.0.1 - 01.12.2019
 
