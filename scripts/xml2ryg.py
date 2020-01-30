@@ -18,6 +18,7 @@ class Config(object):
     FRAME_SIZE = '640x360'
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
     VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
+    VIDEO_SCALE = '960x540'
 
 ##
 # Helper functions
@@ -127,8 +128,7 @@ def jpeg_from_pipe(process):
                 else:
                     dangling_code = False
                 buffer.append(chunk)
-        chunk = process.stdout.read()
-    
+        chunk = process.stdout.read()    
 
 def output_frames(events, videofile, outdir):
     # create a dictionary of frames, where each key corresponds to a
@@ -162,12 +162,31 @@ def output_frames(events, videofile, outdir):
 
     process.communicate()
 
+def output_video(events, videofile, outdir):
+    #TO-DO: add support for varying framerates
+    for e in events:
+        rec_start_seconds = int(e.rec_start_frame) / 23.976
+        rec_duration_seconds = (int(e.rec_end_frame) - 
+                                int(e.rec_start_frame) + 1) / 23.976
+        video_name = Config.VIDEO_NAMING_CONVENTION.format(
+            e.get_custom('Number'), e.clip_name)
+        command = (
+            ffmpeg
+            .input(videofile, ss=rec_start_seconds)
+            .filter('scale', Config.VIDEO_SCALE)
+            .output(
+                os.path.join(outdir, video_name),
+                vcodec='h264', pix_fmt='yuv420p',
+                t=rec_duration_seconds)
+            )
+        ffmpeg.run(command, capture_stdout=True, capture_stderr=True)
+        print('Video written to {}'.format(video_name))
 
 ##
 # Main function
 
 def main(inputfile, outputfile=None, videofile=None,
-         frameoutput=None, **kwargs):
+         frameoutput=None, videooutput=None, **kwargs):
     output_columns = Config.OUTPUT_COLUMNS
 
     events = events_from_xml(inputfile)
@@ -179,8 +198,11 @@ def main(inputfile, outputfile=None, videofile=None,
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
 
-    if videofile:
+    if videofile and frameoutput:
         output_frames(events, videofile, frameoutput)
+
+    if videofile and videooutput:
+        output_video(events, videofile, videooutput)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

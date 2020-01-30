@@ -39,6 +39,24 @@ class TestXml2RygCLI(unittest.TestCase):
         # delete temporary file
         self.temp_output.close()
 
+    def test_video_output(self):
+        with tempfile.TemporaryDirectory() as video_dir:
+            xml2ryg.main(self.test_xml, self.temp_output.name,
+                         videofile=self.test_video,
+                         videooutput=video_dir)
+
+            # read in the csv output
+            reader = csv.reader(self.temp_output)
+            columns = next(reader)
+            
+            for file in sorted(os.listdir(video_dir)):
+                with self.subTest(file=file):
+                    # test that file names match csv rows                   
+                    row = next(reader)
+                    num, clip_name = file.split('_', 1)
+                    self.assertEqual(int(num), int(row[0]))
+                    self.assertEqual(clip_name, row[1] + '.mp4')
+
     def test_frame_output(self):
         # create a temporary image output directory
         with tempfile.TemporaryDirectory() as frame_dir:
