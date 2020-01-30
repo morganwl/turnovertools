@@ -6,24 +6,26 @@ import os
 import re
 import sys
 
-from turnovertools import xmlobjects
+from turnovertools import xmlobjects, csvobjects
 
 class Config(object):
-    OUTPUT_COLUMNS = ['event_num', 'clip_name', 'reel', 'Link',
+    OUTPUT_COLUMNS = ['Number', 'clip_name', 'reel', 'Link', 'NOTES',
                       'Footage Type', 'Footage Source', 'rec_start_tc',
-                      'rec_end_tc', 'src_start_tc', 'src_end_tc']
+                      'rec_end_tc', 'src_start_tc', 'src_end_tc', 'signature']
     
 ##
 # Event processing functions
 def process_events(events):
+    new_events = []
+    i = 0
     for e in events:
         if e.reel is None:
-            events.remove(e)
             continue
         guess_metadata(e)
-    for i, e in enumerate(events):
-        set_event_num(e, i+1)
-    return events
+        e.set_custom('Number', i)
+        i += 1
+        new_events.append(e)
+    return new_events
 
 def remove_filler(e):
     if e.reel is None:
@@ -72,10 +74,8 @@ def sort_by_tc(events):
 def output_csv(events, columns, csvfile):
     writer = csv.writer(csvfile)
     
-    # Mock output
-    writer.writerow(columns)
+    writer.writerow(csvobjects.CSVEvent.convertColumns(columns))
     
-    columns = Config.OUTPUT_COLUMNS
     for e in events:
         row = []
         for col in columns:
@@ -90,16 +90,11 @@ def output_csv(events, columns, csvfile):
 # Main function
 
 def main(inputfile, outputfile=None, **kwargs):
-    # output_columns = Config.OUTPUT_COLUMNS
-    output_columns = ['Event Number', 'Clip Name' , 'Tape Name',
-                      'Link', 'Footage Type',
-                      'Footage Source', 'Rec Start',
-                      'Rec End', 'Source Start',
-                      'Source End']
+    output_columns = Config.OUTPUT_COLUMNS
 
     events = events_from_xml(inputfile)
     sort_by_tc(events)
-    process_events(events)
+    events = process_events(events)
 
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
