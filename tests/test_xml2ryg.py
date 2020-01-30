@@ -16,6 +16,7 @@ from turnovertools import mediaobject
 TEST_FILES = os.path.join(TEST_DIR, 'test_files')
 TEST_XML_COMPLEX = os.path.join(TEST_FILES, 'R2-v29_Flattened.xml')
 EXPECTED_XML_COMPLEX = os.path.join(TEST_FILES, 'R2-v29_Flattened_expected_output.csv')
+TEST_XML_COMPLEX_VIDEO = '/Volumes/LookingGlass1015-AS08_1/Avid MediaFiles/MXF/Creative’s Mac Pro.1/R2-v29,Video Mixdo6A90267CV.mxf'
 
 EXPECTED_CSV_COLUMNS = ['Number', 'Clip Name' , 'Tape Name',
                         'Link', 'Footage Type',
@@ -28,6 +29,7 @@ class TestXml2RygCLI(unittest.TestCase):
         self.test_xml = TEST_XML_COMPLEX
         self.expected_csv = EXPECTED_XML_COMPLEX
         self.expected_columns = EXPECTED_CSV_COLUMNS
+        self.test_video = TEST_XML_COMPLEX_VIDEO
         # reserve a temporary filename and open it as read-only for
         # later verification
         self.temp_output = tempfile.NamedTemporaryFile(mode='r', newline='',
@@ -36,6 +38,19 @@ class TestXml2RygCLI(unittest.TestCase):
     def tearDown(self):
         # delete temporary file
         self.temp_output.close()
+
+    def test_frame_output(self):
+        with tempfile.TemporaryDirectory() as frame_dir:
+            xml2ryg.main(self.test_xml, self.temp_output.name,
+                         videofile=self.test_video,
+                         frameoutput=frame_dir)
+            for file in os.listdir(frame_dir):
+                with open(os.path.join(frame_dir, file), 'rb') as frame:
+                    beginning = frame.read(3)
+                    frame.seek(-2, 2)
+                    end = frame.read(2)
+                    self.assertEqual(beginning, b'\xff\xd8\xff')
+                    self.assertEqual(end, b'\xff\xd9')
 
     def test_csv_expected_output(self):
         # read in expected csv output

@@ -84,7 +84,7 @@ class Event(MediaObject):
         list form."""
         if getattr(self, '_posterframes', None):
             return self._posterfames
-        return [self.rec_start_frame]
+        return [0]
 
     @posterframes.setter
     def posterframes(self, val):
