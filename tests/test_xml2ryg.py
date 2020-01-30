@@ -16,7 +16,7 @@ from turnovertools import mediaobject
 TEST_FILES = os.path.join(TEST_DIR, 'test_files')
 TEST_XML_COMPLEX = os.path.join(TEST_FILES, 'R2-v29_Flattened.xml')
 
-EXPECTED_CSV_COLUMNS = ['Event Number', 'Clip Name' , 'Tape Name',
+EXPECTED_CSV_COLUMNS = ['Number', 'Clip Name' , 'Tape Name',
                         'Link', 'Footage Type',
                         'Footage Source', 'Rec Start',
                         'Rec End', 'Source Start',
@@ -26,38 +26,43 @@ class TestXml2RygCLI(unittest.TestCase):
     def setUp(self):
         self.test_xml = TEST_XML_COMPLEX
         self.expected_columns = EXPECTED_CSV_COLUMNS
+        # reserve a temporary filename and open it as read-only for
+        # later verification
+        self.temp_output = tempfile.NamedTemporaryFile(mode='r', newline='',
+                                                       suffix='.csv')
+
+    def tearDown(self):
+        # delete temporary file
+        self.temp_output.close()
 
     def test_csv_output(self):
         """
         Test single argument functionality.
         """
 
-        # create a temporary file
-        with tempfile.NamedTemporaryFile(mode='r', newline='',
-                                         suffix='.csv') as tmp:
-            # call xml2ryg with the path of our temporary file as the
-            # output option
-            xml2ryg.main(self.test_xml, tmp.name)
+        # call xml2ryg with the path of our temporary file as the
+        # output option
+        xml2ryg.main(self.test_xml, self.temp_output.name)
 
-            # read in from the temporary file
-            reader = csv.reader(tmp)
+        # read in from the temporary file
+        reader = csv.reader(self.temp_output)
 
-            # check that columns are as expected
-            columns = next(reader)
-            self.assertEqual(columns, self.expected_columns)
+        # check that columns are as expected
+        columns = next(reader)
+        self.assertEqual(columns, self.expected_columns)
 
-            # check that values of first row are expected
-            expected_row_1 = ['1', 'CL_SLATE_23_976.mov',
-                              'CL_SLATE_23_976.mov', '', 'Slate', '',
-                              '00:59:58:00', '00:59:58:00',
-                              '00:00:00:00', '00:00:00:00']
-            row = next(reader)
-            self.assertEqual(row, expected_row_1)
-
-            # read through remaining rows to make sure they do not
-            # generate any errors
-            for row in reader:
-                self.assertEqual(len(columns), len(row))
+        # check that values of first row are expected
+        expected_row_1 = ['1', 'CL_SLATE_23_976.mov',
+                          'CL_SLATE_23_976.mov', '', 'Slate', '',
+                          '00:59:58:00', '00:59:58:00',
+                          '00:00:00:00', '00:00:00:00']
+        row = next(reader)
+        self.assertEqual(row, expected_row_1)
+        
+        # read through remaining rows to make sure they do not
+        # generate any errors
+        for row in reader:
+            self.assertEqual(len(columns), len(row))
 
 class TestXml2rygInternals(unittest.TestCase):
     def setUp(self):
