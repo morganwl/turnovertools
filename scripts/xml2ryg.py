@@ -17,6 +17,7 @@ class Config(object):
                       'rec_end_tc', 'src_start_tc', 'src_end_tc', 'signature']
     FRAME_SIZE = '640x360'
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
+    VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
 
 ##
 # Helper functions
@@ -134,7 +135,7 @@ def output_frames(events, videofile, outdir):
     # frame number in videofile, and contains a list of events for
     # that frame. (Some stacked events will use the same poster frame)
     frame_numbers = collections.defaultdict(list)
-    for e in events[0:4]:
+    for e in events:
         frame = int(e.rec_start_frame) + e.posterframes[0]
         frame_numbers[frame].append(e)
     framestrings = []

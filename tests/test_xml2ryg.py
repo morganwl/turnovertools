@@ -40,17 +40,31 @@ class TestXml2RygCLI(unittest.TestCase):
         self.temp_output.close()
 
     def test_frame_output(self):
+        # create a temporary image output directory
         with tempfile.TemporaryDirectory() as frame_dir:
             xml2ryg.main(self.test_xml, self.temp_output.name,
                          videofile=self.test_video,
                          frameoutput=frame_dir)
-            for file in os.listdir(frame_dir):
+
+            # read in the csv output
+            reader = csv.reader(self.temp_output)
+            columns = next(reader)
+
+            for file in sorted(os.listdir(frame_dir)):
                 with open(os.path.join(frame_dir, file), 'rb') as frame:
-                    beginning = frame.read(3)
-                    frame.seek(-2, 2)
-                    end = frame.read(2)
-                    self.assertEqual(beginning, b'\xff\xd8\xff')
-                    self.assertEqual(end, b'\xff\xd9')
+                    with self.subTest(file=file):
+                        # test that files are complete jpeg files
+                        beginning = frame.read(3)
+                        frame.seek(-2, 2)
+                        end = frame.read(2)
+                        self.assertEqual(beginning, b'\xff\xd8\xff')
+                        self.assertEqual(end, b'\xff\xd9')
+                        
+                        # test that file names match csv rows
+                        row = next(reader)
+                        num, clip_name = file.split('_', 1)
+                        self.assertEqual(int(num), int(row[0]))
+                        self.assertEqual(clip_name, row[1] + '.jpg')
 
     def test_csv_expected_output(self):
         # read in expected csv output
