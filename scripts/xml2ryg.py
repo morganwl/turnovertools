@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import collections
 import csv
 from itertools import chain
@@ -184,6 +185,8 @@ def output_video(events, videofile, outdir):
 
 ##
 # Main function
+
+
 
 def main(inputfile, outputfile=None, videofile=None,
          frameoutput=None, videooutput=None, **kwargs):
