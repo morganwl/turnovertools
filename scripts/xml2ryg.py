@@ -186,7 +186,8 @@ def output_video(events, videofile, outdir):
 ##
 # Main function
 
-
+def setup_argparse():
+    pass
 
 def main(inputfile, outputfile=None, videofile=None,
          frameoutput=None, videooutput=None, **kwargs):
