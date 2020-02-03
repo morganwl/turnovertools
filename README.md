@@ -12,9 +12,9 @@ tools for processing Avid Media Composer turnovers
     - poster frames are numbered and labeled exactly matching event
   - output video for each event
     - video labeled exactly matching event
+  - added command line syntax
 
 - To-Do:
-  - command line syntax
   - multiple framerates
   - some sort of configuration file
   - guess reel numbers and media file locations

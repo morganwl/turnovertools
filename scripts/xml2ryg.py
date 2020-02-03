@@ -186,8 +186,14 @@ def output_video(events, videofile, outdir):
 ##
 # Main function
 
-def setup_argparse():
-    pass
+def parse_arguments(args):
+    parser = argparse.ArgumentParser(prog=args[0])
+    parser.add_argument('input')
+    parser.add_argument('outputfile', nargs='?', default=None)
+    parser.add_argument('-v', '--videofile')
+    parser.add_argument('-fo', '--frame-output', dest='frameoutput')
+    parser.add_argument('-vo', '--video-output', dest='videooutput')
+    return parser.parse_args(args[1:])
 
 def main(inputfile, outputfile=None, videofile=None,
          frameoutput=None, videooutput=None, **kwargs):
@@ -208,5 +214,9 @@ def main(inputfile, outputfile=None, videofile=None,
     if videofile and videooutput:
         output_video(events, videofile, videooutput)
 
+def xml2ryg():
+    args = parse_arguments(sys.argv)
+    main(args.input, **(vars(args)))
+
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    xml2ryg()
