@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="turnovertools-morgan",
-    version="0.0.2",
+    version="0.0.3",
     author="Morgan Wajda-Levie",
     author_email="morgan.wajdalevie@gmail.com",
     description="Tools for processing Avid Media Composer turnovers.",

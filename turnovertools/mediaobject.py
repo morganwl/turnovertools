@@ -103,7 +103,21 @@ class Event(MediaObject):
         self.tape_name = val
 
 class SourceClip(MediaObject):
-    pass
+    def get_custom(self, name):
+        raise NotImplementedError()
+
+    @property
+    def reel(self):
+        if self.tape_name is not None:
+            return self.tape_name
+        return self.source_file
+
+    @reel.setter
+    def reel(self, val):
+        if self.source_file is not None:
+            self.source_file = val
+        self.tape_name = val
+    
 
 class Bin(MediaObject):
     pass
