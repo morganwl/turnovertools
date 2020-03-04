@@ -73,7 +73,7 @@ class SequenceTrack(MediaObject, collections.abc.Sequence):
         return len(self.events)
 
 class Event(MediaObject):
-    __requires_properties__ = ['clip_name']
+    __requires_properties__ = ['clip_name', 'source_file', 'tape_name']
 
     def get_custom(self, name):
         raise NotImplementedError()
