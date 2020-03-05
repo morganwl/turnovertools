@@ -11,7 +11,8 @@ import sys
 import edl
 import ffmpeg
 
-from turnovertools import edlobjects.EDLEvent
+from turnovertools.edlobjects import EDLEvent
+from turnovertools import linkfinder
 
 class Config(object):
     OUTPUT_COLUMNS = ['Number', 'clip_name', 'reel', 'Link', 'NOTES',
@@ -21,6 +22,7 @@ class Config(object):
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
     VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
     VIDEO_SCALE = '960x540'
+    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.ShutterMatcher() ]
 
 def change_ext(filename, ext):
     return os.path.splitext(filename)[0] + ext
@@ -34,6 +36,13 @@ def events_from_edl(inputfile):
     for e in edit_list.events:
         events.append(EDLEvent(seq_start, e))
     return events
+
+def process_events(events, ale_file=None):
+    matchers = Config.MATCHERS
+    matchers.insert(0, linkfinder.ALEMatcher('/Users/wajdalevie/private_test_files/turnover_tools/LG_R1_200303_RYG.ALE'))
+    for e in events:
+        e.link = linkfinder.process(e.reel, matchers)
+        print(e.link)
 
 def output_csv(events, columns, csvfile):
     writer = csv.writer(csvfile)
