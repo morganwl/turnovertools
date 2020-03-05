@@ -2,17 +2,20 @@
 
 from abc import ABCMeta
 
+import edl
+
 from . import mediaobject
 
-class EDLWrapperMeta(ABCMeta):
+
+class EDLWrapper(ABCMeta):
     def __new__(meta, name, bases, class_dict):
         lookup = class_dict.get('__lookup__', {})
         for prop, target in lookup.items():
             if prop not in class_dict:
                 class_dict[prop] = property(meta.getmapper(target),
                                             meta.setmapper(target))
-                cls = type.__new__(meta, name, bases, class_dict)
-                return cls
+        cls = type.__new__(meta, name, bases, class_dict)
+        return cls
 
     def getmapper(target):
         def getter(self):
@@ -24,7 +27,8 @@ class EDLWrapperMeta(ABCMeta):
             setattr(self.data, target, val)
         return setter
 
-class EDLObject(metaclass=EDLWrapperMeta):
+
+class EDLObject(object, metaclass=EDLWrapper):
     pass
 
 class EDLEvent(mediaobject.Event, EDLObject):
@@ -36,8 +40,8 @@ class EDLEvent(mediaobject.Event, EDLObject):
                   'rec_start_tc' : 'rec_start_tc',
                   'rec_end_tc' : 'rec_end_tc',
                   'event_num' : 'num'}
+    __wraps_type__ = edl.Event
 
-    wraps_type = edl.Event
 
     def __init__(self, seq_start, data=None, **kwargs):
         super(EDLEvent, self).__init__(data=data, **kwargs)
