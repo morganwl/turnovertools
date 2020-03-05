@@ -12,7 +12,7 @@ import edl
 import ffmpeg
 
 from turnovertools.edlobjects import EDLEvent
-from turnovertools import linkfinder
+from turnovertools import linkfinder, csvobjects
 
 class Config(object):
     OUTPUT_COLUMNS = ['Number', 'clip_name', 'reel', 'Link', 'NOTES',
@@ -40,9 +40,11 @@ def events_from_edl(inputfile):
 def process_events(events, ale_file=None):
     matchers = Config.MATCHERS
     matchers.insert(0, linkfinder.ALEMatcher('/Users/wajdalevie/private_test_files/turnover_tools/LG_R1_200303_RYG.ALE'))
+    i = 0
     for e in events:
         e.link = linkfinder.process(e.reel, matchers)
-        print(e.link)
+        e.number = i
+        i += 1
 
 def output_csv(events, columns, csvfile):
     writer = csv.writer(csvfile)
@@ -52,8 +54,8 @@ def output_csv(events, columns, csvfile):
     for e in events:
         row = []
         for col in columns:
-            if hasattr(e, col):
-                val = getattr(e, col, None)
+            if hasattr(e, col.lower()):
+                val = getattr(e, col.lower(), None)
             else:
                 val = e.get_custom(col)
             row.append(val)
@@ -157,7 +159,7 @@ def main(inputfile, outputfile=None, videofile=None,
     
     events = events_from_edl(inputfile)
     #sort_by_tc(events)
-    #events = process_events(events)
+    process_events(events)
 
     if outputfile is None:
         outputfile = change_ext(inputfile, '.csv')
