@@ -41,7 +41,8 @@ class GettyMatcher(Matcher):
 
     def action(self):
         id = self.result.group(1)
-        link = find_link('www.gettyimages.com', '/photos/104351511?license=rf&family=creative&phrase={}&sort=best#license'.format(id), id, class_='gallery-mosaic-asset__link')
+        link = 'https://www.gettyimages.com/photos/{}'.format(id)
+        #link = find_link('www.gettyimages.com', '/photos/104351511?license=rf&family=creative&phrase={}&sort=best#license'.format(id), id, class_='gallery-mosaic-asset__link')
         return link
 
 class ShutterMatcher(Matcher):
