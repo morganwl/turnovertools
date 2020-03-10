@@ -39,9 +39,12 @@ def events_from_edl(inputfile):
 
 def process_events(events, ale_file=None):
     matchers = Config.MATCHERS
-    matchers.insert(0, linkfinder.ALEMatcher('/Users/wajdalevie/private_test_files/turnover_tools/LG_R1_200303_RYG.ALE'))
+    matchers.insert(0, linkfinder.ALEMatcher('/Volumes/Looking Glass 1015_1/LookingGlass_WorkingMedia/TURNOVERS/RYG/200309_AB PRECUT/LG_R4_200309_RYG.ALE'))
     i = 0
     for e in events:
+        if e.reel is None:
+            events.remove(e)
+            continue
         e.link = linkfinder.process(e.reel, matchers)
         e.number = i
         i += 1
@@ -117,7 +120,7 @@ def output_frames(events, videofile, outdir):
     for img, frames in zip(jpeg_from_pipe(process), frame_numbers.values()):
         for e in frames:
             img_name = Config.FRAME_NAMING_CONVENTION.\
-                format(e.get_custom('Number'), e.clip_name)
+                format(e.number, e.clip_name)
             with open(os.path.join(outdir, img_name), 'wb') as img_file:
                 img_file.write(img)
                 print('{} bytes written to {}'.format(len(img), img_name))
@@ -131,7 +134,7 @@ def output_video(events, videofile, outdir):
         rec_duration_seconds = (int(e.rec_end_frame) - 
                                 int(e.rec_start_frame) + 1) / 23.976
         video_name = Config.VIDEO_NAMING_CONVENTION.format(
-            e.get_custom('Number'), e.clip_name)
+            e.number, e.clip_name)
         command = (
             ffmpeg
             .input(videofile, ss=rec_start_seconds)

@@ -32,7 +32,7 @@ class EDLObject(object, metaclass=EDLWrapper):
     pass
 
 class EDLEvent(mediaobject.Event, EDLObject):
-    __lookup__ = {'clip_name' : 'Clip Name',
+    __lookup__ = {'clip_name' : 'clip_name',
                   'tape_name' : 'tape_name',
                   'source_file' : 'source_file',
                   'src_start_tc' : 'src_start_tc',
@@ -48,11 +48,16 @@ class EDLEvent(mediaobject.Event, EDLObject):
         self._abs_rec_start = self.rec_start_tc - seq_start
 
     def get_custom(self, name):
-        return getattr(self.data, name, None)
+        return getattr(self.data, name.lower(), None)
 
     def set_custom(self, name, val):
-        setattr(self.data, name, val)
+        setattr(self.data, name.lower(), val)
 
     @property
     def rec_start_frame(self):
         return self._abs_rec_start.frames
+
+    @property
+    def rec_end_frame(self):
+        print(self._abs_rec_start.frames, self.data.rec_length())
+        return self._abs_rec_start.frames + self.data.rec_length() - 1

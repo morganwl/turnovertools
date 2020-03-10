@@ -14,7 +14,7 @@ setuptools.setup(
     long_description=long_description,
     long_desription_content_type="text/markdown",
     url="https://github.com/morganwl/turnovertools/",
-    scripts=['scripts/xml2ryg.py'],
+    scripts=['scripts/xml2ryg2.py'],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -56,9 +56,9 @@ class ShutterMatcher(Matcher):
 class FootageTrackerMatcher(Matcher):
     pattern = r'^(CL\d+)'
 
-    def __init__(self, **kwargs):
+    def __init__(self, trackerfile='/Users/creativelab/lg_footage_tracker.csv', **kwargs):
         super(FootageTrackerMatcher, self).__init__(**kwargs)
-        with open('/Users/creativelab/lg_footage_tracker.csv', newline='') as csvfile:
+        with open(trackerfile, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             self.index(reader)
 
@@ -94,7 +94,7 @@ class ALEMatcher(Matcher):
     def __init__(self, filename, **kwargs):
         super(ALEMatcher, self).__init__(**kwargs)
         rows = list()
-        with open(filename) as fh:
+        with open(filename, encoding='mac-roman') as fh:
             while next(fh) != 'Column\n':
                 pass
             field_names = next(fh).split('\t')
