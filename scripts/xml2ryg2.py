@@ -27,9 +27,19 @@ class Config(object):
 def change_ext(filename, ext):
     return os.path.splitext(filename)[0] + ext
 
-def events_from_edl(inputfile):
+def events_from_edl(edl_files):
+    events = list()
+    for file in edl_files:
+        events.extend(import_edl(file))
+    return events
+
+def sort_by_tc(events):
+    events.sort(key=lambda e: (e.rec_start_tc.frames, e.track))
+    return events
+
+def import_edl(edl_file):
     parser = edl.Parser('23.98')
-    with open(inputfile) as fh:
+    with open(edl_file) as fh:
         edit_list = parser.parse(fh)
     seq_start = edit_list.get_start()
     events = list()
@@ -37,14 +47,18 @@ def events_from_edl(inputfile):
         events.append(EDLEvent(seq_start, e))
     return events
 
-def process_events(events, ale_file=None):
-    matchers = Config.MATCHERS
-    matchers.insert(0, linkfinder.ALEMatcher('/Volumes/Looking Glass 1015_1/LookingGlass_WorkingMedia/TURNOVERS/RYG/200309_AB PRECUT/LG_R4_200309_RYG.ALE'))
-    i = 0
+def remove_filler(events):
     for e in events:
         if e.reel is None:
             events.remove(e)
             continue
+
+def process_events(events, ale_file=None):
+    matchers = Config.MATCHERS
+    if ale_file:
+        matchers.insert(0, linkfinder.ALEMatcher(ale_file))
+    i = 0
+    for e in events:
         e.link = linkfinder.process(e.reel, matchers)
         e.number = i
         i += 1
@@ -99,6 +113,8 @@ def output_frames(events, videofile, outdir):
     # create a dictionary of frames, where each key corresponds to a
     # frame number in videofile, and contains a list of events for
     # that frame. (Some stacked events will use the same poster frame)
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
     frame_numbers = collections.defaultdict(list)
     for e in events:
         frame = int(e.rec_start_frame) + e.posterframes[0]
@@ -129,6 +145,8 @@ def output_frames(events, videofile, outdir):
 
 def output_video(events, videofile, outdir):
     #TO-DO: add support for varying framerates
+    if not os.path.isdir(outdir):
+        os.mkdir(outdir)
     for e in events:
         rec_start_seconds = int(e.rec_start_frame) / 23.976
         rec_duration_seconds = (int(e.rec_end_frame) - 
@@ -159,13 +177,32 @@ def parse_arguments(args):
 def main(inputfile, outputfile=None, videofile=None,
          frameoutput=None, videooutput=None, **kwargs):
     output_columns = Config.OUTPUT_COLUMNS
+
+    if os.path.isdir(inputfile):
+        dirname = os.path.basename(inputfile)
+        basepath = os.path.abspath(inputfile)
+        inputfile = list()
+        outputfile = os.path.join(basepath, dirname + '.csv')
+        print(dirname)
+        for file in os.listdir(basepath):
+            if file.endswith('.mov') or file.endswith('.mxf'):
+                frameoutput = os.path.join(basepath, dirname + '_frames')
+                videooutput = os.path.join(basepath, dirname + '_video')
+                videofile = os.path.join(basepath, file)
+            if file.endswith('.edl'):
+                inputfile.append(os.path.join(basepath, file))
+            if file.endswith('.ale'):
+                ale_file = os.path.join(basepath, file)
+    else:
+        inputfile = [ inputfile ]
     
     events = events_from_edl(inputfile)
-    #sort_by_tc(events)
+    remove_filler(events)
+    sort_by_tc(events)
     process_events(events)
 
     if outputfile is None:
-        outputfile = change_ext(inputfile, '.csv')
+        outputfile = change_ext(inputfile[0], '.csv')
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
 

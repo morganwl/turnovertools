@@ -140,6 +140,7 @@ def process(line, matchers):
     for m in matchers:
         if m.match(line):
             line = m.action()
+            print(m)
             break
     if isinstance(line, str):
         line = line.strip()

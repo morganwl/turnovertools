@@ -79,7 +79,7 @@ def events_from_xml(xmlpath):
     return events
 
 def sort_by_tc(events):
-    events.sort(key=lambda e: (e.rec_start_tc, e.parent.track_name))
+    events.sort(key=lambda e: (e.rec_start_tc, e.parent.track))
     return events
 
 ##

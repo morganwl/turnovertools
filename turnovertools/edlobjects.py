@@ -39,7 +39,8 @@ class EDLEvent(mediaobject.Event, EDLObject):
                   'src_end_tc' : 'src_end_tc',
                   'rec_start_tc' : 'rec_start_tc',
                   'rec_end_tc' : 'rec_end_tc',
-                  'event_num' : 'num'}
+                  'event_num' : 'num',
+                  'track' : 'track', }
     __wraps_type__ = edl.Event
 
 
@@ -61,3 +62,5 @@ class EDLEvent(mediaobject.Event, EDLObject):
     def rec_end_frame(self):
         print(self._abs_rec_start.frames, self.data.rec_length())
         return self._abs_rec_start.frames + self.data.rec_length() - 1
+
+    
