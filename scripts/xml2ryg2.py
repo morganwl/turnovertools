@@ -172,10 +172,15 @@ def parse_arguments(args):
     parser.add_argument('-v', '--videofile')
     parser.add_argument('-fo', '--frame-output', dest='frameoutput')
     parser.add_argument('-vo', '--video-output', dest='videooutput')
+    parser.add_argument('-np', '--no-picture', dest='nopicture',
+                        help='skip video and frame output,' +\
+                            'even if appropriate media file is found',
+                        action='store_true')
     return parser.parse_args(args[1:])
 
 def main(inputfile, outputfile=None, videofile=None,
-         frameoutput=None, videooutput=None, **kwargs):
+         frameoutput=None, videooutput=None, nopicture=False,
+         ale_file=None, **kwargs):
     output_columns = Config.OUTPUT_COLUMNS
 
     if os.path.isdir(inputfile):
@@ -185,13 +190,14 @@ def main(inputfile, outputfile=None, videofile=None,
         outputfile = os.path.join(basepath, dirname + '.csv')
         print(dirname)
         for file in os.listdir(basepath):
-            if file.endswith('.mov') or file.endswith('.mxf'):
+            if (file.lower().endswith('.mov') or file.lower().endswith('.mxf')) and\
+            not nopicture:
                 frameoutput = os.path.join(basepath, dirname + '_frames')
                 videooutput = os.path.join(basepath, dirname + '_video')
                 videofile = os.path.join(basepath, file)
-            if file.endswith('.edl'):
+            if file.lower().endswith('.edl'):
                 inputfile.append(os.path.join(basepath, file))
-            if file.endswith('.ale'):
+            if file.lower().endswith('.ale'):
                 ale_file = os.path.join(basepath, file)
     else:
         inputfile = [ inputfile ]
@@ -199,7 +205,7 @@ def main(inputfile, outputfile=None, videofile=None,
     events = events_from_edl(inputfile)
     remove_filler(events)
     sort_by_tc(events)
-    process_events(events)
+    process_events(events, ale_file)
 
     if outputfile is None:
         outputfile = change_ext(inputfile[0], '.csv')
