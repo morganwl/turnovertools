@@ -22,7 +22,8 @@ class Config(object):
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
     VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
     VIDEO_SCALE = '960x540'
-    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.ShutterMatcher() ]
+    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.ShutterMatcher(),
+                 linkfinder.FilmSupplyMatcher() ]
 
 def change_ext(filename, ext):
     return os.path.splitext(filename)[0] + ext
@@ -53,8 +54,10 @@ def remove_filler(events):
             events.remove(e)
             continue
 
-def process_events(events, ale_file=None):
+def process_events(events, ale_file=None, footage_tracker=None):
     matchers = Config.MATCHERS
+    if footage_tracker:
+        matchers.insert(0, linkfinder.FootageTrackerMatcher(footage_tracker))
     if ale_file:
         matchers.insert(0, linkfinder.ALEMatcher(ale_file))
     i = 0
@@ -180,7 +183,7 @@ def parse_arguments(args):
 
 def main(inputfile, outputfile=None, videofile=None,
          frameoutput=None, videooutput=None, nopicture=False,
-         ale_file=None, **kwargs):
+         ale_file=None, footage_tracker=None, **kwargs):
     output_columns = Config.OUTPUT_COLUMNS
 
     if os.path.isdir(inputfile):
@@ -199,13 +202,16 @@ def main(inputfile, outputfile=None, videofile=None,
                 inputfile.append(os.path.join(basepath, file))
             if file.lower().endswith('.ale'):
                 ale_file = os.path.join(basepath, file)
+            if file.lower().endswith('.csv') and \
+                    'footagetracker' in file.lower():
+                footage_tracker = os.path.join(basepath, file)
     else:
         inputfile = [ inputfile ]
     
     events = events_from_edl(inputfile)
     remove_filler(events)
     sort_by_tc(events)
-    process_events(events, ale_file)
+    process_events(events, ale_file, footage_tracker)
 
     if outputfile is None:
         outputfile = change_ext(inputfile[0], '.csv')

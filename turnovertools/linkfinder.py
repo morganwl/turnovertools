@@ -53,6 +53,14 @@ class ShutterMatcher(Matcher):
         link = 'https://www.shutterstock.com/search/{}'.format(id)
         return link
 
+class FilmSupplyMatcher(Matcher):
+    pattern = r'-(\d+)-filmsupply'
+
+    def action(self):
+        id = self.result.group(1)
+        link = f'https://www.filmsupply.com/clips?search={id}'
+        return link
+
 class FootageTrackerMatcher(Matcher):
     pattern = r'^(CL\d+)'
 
@@ -128,6 +136,7 @@ def find_link(host, urlpath, pattern='', **kwargs):
     url = 'https://{}{}'.format(host, urlpath)
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
+    print(soup)
     found = soup.findAll('a', **kwargs)
     for a in found:
         if pattern in a['href']:
@@ -141,6 +150,8 @@ def process(line, matchers):
         if m.match(line):
             line = m.action()
             break
+    else:
+        print('No match found for', line)
     if isinstance(line, str):
         line = line.strip()
     return line
