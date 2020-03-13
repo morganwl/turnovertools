@@ -117,10 +117,13 @@ class ALEMatcher(Matcher):
         self.ale = rows
 
     def match(self, line):
-        line = line.upper()
+        line = line.rsplit('.', 1)[0].upper()
         # we should use a dictionary search, but need to resolve multiple entries with the same source first
         for clip in self.ale:
-            if (clip['Tape'].upper() == line or clip['Source File'].upper() == line) and clip['Link'] != '':
+            tape = clip['Tape'].upper()
+            sourcefile = clip['Source File'].rsplit('.', 1)[0].upper()
+            # print(line, ':', tape, ':', sourcefile)
+            if (tape == line or sourcefile == line) and clip['Link'] != '':
                 self.result = clip['Link']
                 return True
         return False
