@@ -6,10 +6,13 @@ import csv
 from itertools import chain
 import os
 import re
+import shutil
 import sys
 
 import edl
 import ffmpeg
+from timecode import Timecode
+from selenium import webdriver
 
 from turnovertools.edlobjects import EDLEvent
 from turnovertools import linkfinder, csvobjects
@@ -22,16 +25,24 @@ class Config(object):
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
     VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
     VIDEO_SCALE = '960x540'
-    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.ShutterMatcher(),
+    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.GettyVideoMatcher(),
+                 linkfinder.ShutterMatcher(), linkfinder.ShutterVideoMatcher(),
                  linkfinder.FilmSupplyMatcher() ]
 
 def change_ext(filename, ext):
     return os.path.splitext(filename)[0] + ext
 
 def events_from_edl(edl_files):
-    events = list()
+    tmp_events = list()
+    seq_start = Timecode('23.98', '23:59:59:23')
     for file in edl_files:
-        events.extend(import_edl(file))
+        new_events, new_start = import_edl(file)
+        tmp_events.extend(new_events)
+        if new_start.frames < seq_start.frames:
+            seq_start = new_start
+    events = list()
+    for e in tmp_events:
+        events.append(EDLEvent(seq_start, e))
     return events
 
 def sort_by_tc(events):
@@ -43,10 +54,7 @@ def import_edl(edl_file):
     with open(edl_file) as fh:
         edit_list = parser.parse(fh)
     seq_start = edit_list.get_start()
-    events = list()
-    for e in edit_list.events:
-        events.append(EDLEvent(seq_start, e))
-    return events
+    return edit_list.events, seq_start
 
 def remove_filler(events):
     for e in events:
@@ -62,7 +70,12 @@ def process_events(events, ale_file=None, footage_tracker=None):
         matchers.insert(0, linkfinder.ALEMatcher(ale_file))
     i = 0
     for e in events:
-        e.link = linkfinder.process(e.reel, matchers)
+        # look for sourcefile first instead of tape name
+        if e.source_file:
+            reel = e.source_file
+        else:
+            reel = e.tape
+        e.link = linkfinder.process(reel, matchers)
         e.number = i
         i += 1
 
@@ -80,6 +93,30 @@ def output_csv(events, columns, csvfile):
                 val = e.get_custom(col)
             row.append(val)
         writer.writerow(row)
+
+def output_link_tests(events, basedir):
+    if not os.path.isdir(basedir):
+        os.mkdir(basedir)
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    driver = webdriver.Chrome(chrome_options=options)
+    seen_links = dict()
+    for e in events:
+        if 'http' in e.link:
+            img_name = Config.FRAME_NAMING_CONVENTION.\
+                format(e.number, e.clip_name).replace('.jpg', '.png')
+            img_name = os.path.join(basedir, img_name)
+            if e.link in seen_links:
+                shutil.copyfile(seen_links[e.link], img_name)
+                continue
+            try:
+                driver.get(e.link)
+            except:
+                pass
+            else:
+                driver.save_screenshot(img_name)
+                seen_links[e.link] = img_name            
+    driver.quit()        
 
 def jpeg_from_pipe(process):
     buffer = []
@@ -217,6 +254,7 @@ def main(inputfile, outputfile=None, videofile=None,
         outputfile = change_ext(inputfile[0], '.csv')
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
+    output_link_tests(events, change_ext(outputfile, '_linktests'))
 
     if videofile and frameoutput:
         output_frames(events, videofile, frameoutput)
