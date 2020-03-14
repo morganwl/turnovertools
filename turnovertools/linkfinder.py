@@ -36,21 +36,35 @@ class Matcher(object):
     def action(self):
         raise NotImplementedError()
 
+class GettyVideoMatcher(Matcher):
+    pattern = r'GettyImages-(\d+)'
+
+    def action(self):
+        id = self.result.group(1)
+        return f'https://www.gettyimages.com/video/{id}'
+
 class GettyMatcher(Matcher):
-    pattern = r'^GettyImages-(\d+)'
+    pattern = r'GettyImages-(\d+)\.jpg'
 
     def action(self):
         id = self.result.group(1)
         link = 'https://www.gettyimages.com/photos/{}'.format(id)
-        #link = find_link('www.gettyimages.com', '/photos/104351511?license=rf&family=creative&phrase={}&sort=best#license'.format(id), id, class_='gallery-mosaic-asset__link')
         return link
 
 class ShutterMatcher(Matcher):
-    pattern = r'^shutterstock_(\d+)'
+    pattern = r'^shutterstock_(\d+)\.jpg'
 
     def action(self):
         id = self.result.group(1)
         link = 'https://www.shutterstock.com/search/{}'.format(id)
+        return link
+
+class ShutterVideoMatcher(Matcher):
+    pattern = r'^shutterstock_(\d+)'
+
+    def action(self):
+        id = self.result.group(1)
+        link = 'https://www.shutterstock.com/video/search/{}'.format(id)
         return link
 
 class FilmSupplyMatcher(Matcher):

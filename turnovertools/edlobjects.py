@@ -43,10 +43,9 @@ class EDLEvent(mediaobject.Event, EDLObject):
                   'track' : 'track', }
     __wraps_type__ = edl.Event
 
-
     def __init__(self, seq_start, data=None, **kwargs):
         super(EDLEvent, self).__init__(data=data, **kwargs)
-        self._abs_rec_start = self.rec_start_tc - seq_start
+        self._seq_start = seq_start
 
     def get_custom(self, name):
         return getattr(self.data, name.lower(), None)
@@ -56,11 +55,10 @@ class EDLEvent(mediaobject.Event, EDLObject):
 
     @property
     def rec_start_frame(self):
-        return self._abs_rec_start.frames
+        return (self.rec_start_tc - self._seq_start).frames
 
     @property
     def rec_end_frame(self):
-        print(self._abs_rec_start.frames, self.data.rec_length())
-        return self._abs_rec_start.frames + self.data.rec_length() - 1
+        return self.rec_start_frame + self.data.rec_length() - 1
 
     
