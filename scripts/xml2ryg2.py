@@ -254,7 +254,7 @@ def main(inputfile, outputfile=None, videofile=None,
         outputfile = change_ext(inputfile[0], '.csv')
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
-    output_link_tests(events, change_ext(outputfile, '_linktests'))
+    #output_link_tests(events, change_ext(outputfile, '_linktests'))
 
     if videofile and frameoutput:
         output_frames(events, videofile, frameoutput)
