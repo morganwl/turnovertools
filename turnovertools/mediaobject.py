@@ -130,7 +130,7 @@ class DictWrapperMeta(ABCMeta):
                 class_dict[prop] = property(meta.getmapper(target),
                                             meta.setmapper(target))
         cls = type.__new__(meta, name, bases, class_dict)
-        return cls        
+        return cls
 
     def getmapper(target):
         def getter(self):
@@ -141,6 +141,7 @@ class DictWrapperMeta(ABCMeta):
         def setter(self, val):
             self.data[target] = val
         return setter
+
 
 class DictWrapper(object, metaclass=DictWrapperMeta):
     __wraps_type__ = dict

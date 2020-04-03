@@ -3,27 +3,7 @@ import collections
 
 from . import mediaobject
 
-class DictWrapperMeta(ABCMeta):
-    def __new__(meta, name, bases, class_dict):
-        lookup = class_dict.get('__lookup__', {})
-        for prop, target in lookup.items():
-            if prop not in class_dict:
-                class_dict[prop] = property(meta.getmapper(target),
-                                            meta.setmapper(target))
-        cls = type.__new__(meta, name, bases, class_dict)
-        return cls
-
-    def getmapper(target):
-        def getter(self):
-            return self.data.get(target, None)
-        return getter
-
-    def setmapper(lookup):
-        def setter(self, val):
-            self.data[target] = val
-        return setter
-
-class CSVObject(metaclass=DictWrapperMeta):
+class CSVObject(metaclass=mediaobject.DictWrapperMeta):
     pass
 
 class CSVEvent(mediaobject.Event, CSVObject):

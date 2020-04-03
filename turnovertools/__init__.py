@@ -8,6 +8,7 @@ from . import (
     xmlobjects,
     csvobjects,
     edlobjects,
-    linkfinder
+    linkfinder,
+    subcap
 )
 

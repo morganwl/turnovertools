@@ -9,6 +9,7 @@ from timecode import Timecode
 
 from turnovertools.edlobjects import EDLEvent
 from turnovertools import csvobjects
+from turnovertools.subcap import Subcap
 
 class Config(object):
     OUTPUT_COLUMNS = ['clip_name', 'reel', 'rec_start_tc',
@@ -89,18 +90,29 @@ def read_vfx_locators(events):
             tc = l[7:18]
             color, comment = l[19:].split(' ', 1)
             if comment.startswith('VFX='):
+                print(e.src_start_tc.framerate)
                 fields = comment.split('=')
                 # Allow for missing fields in the middle by starting
                 # with the vfx_id at the front of the string and then
                 # popping decreasingly important fields from the back
                 fields.pop(0)
                 e.vfx_id = fields.pop(0)
+                e.vfx_brief = ''
+                e.vfx_element = ''
                 if fields:
                     e.vfx_brief = fields.pop()
                 if fields:
                     e.vfx_element = fields.pop()
                 e.vfx_loc_tc = e.src_tc_at(tc)
                 e.vfx_loc_color = color
+
+def make_subcaps(events):
+    subcaps = list()
+    for e in events:
+        if hasattr(e, 'vfx_id'):
+            subcaps.append(Subcap(e.rec_start_tc, e.rec_end_tc,
+                                  f'{e.vfx_id}:    {e.vfx_brief}'))
+    return subcaps
 
 def output_csv(events, columns, csvfile):
     writer = csv.writer(csvfile)
@@ -134,11 +146,14 @@ def main(inputfile, outputfile=None, **kwargs):
     remove_filler(events)
     sort_by_tc(events)
     read_vfx_locators(events)
+    subcaps = make_subcaps(events)
 
     if outputfile is None:
         outputfile = change_ext(inputfile[0], '.csv')
     with open(outputfile, 'wt', newline='') as csvfile:
         output_csv(events, output_columns, csvfile)
+
+    Subcap.write(change_ext(outputfile, '_subcap.txt'), subcaps)
 
 if __name__ == '__main__':
     main(sys.argv[1])
