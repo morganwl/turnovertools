@@ -9,6 +9,7 @@ from . import (
     csvobjects,
     edlobjects,
     linkfinder,
-    subcap
+    subcap,
+    vfxlist
 )
 
