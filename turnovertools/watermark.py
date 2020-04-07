@@ -19,8 +19,9 @@ def blank_image(size = None):
     return Image.new('RGBA', size, (255,255,255,0))
 
 def draw_text(img, text, origin=(5,5), color=(255,255,255,255),
-              face=None, font_size=None, align='left',
-              rel_pos=None):
+              face=None, font_size=None, align=('left', 'top'),
+              rel_pos=None, box_width=None, box_height=None,
+              box_fill=(0,0,0,0)):
     if face is None:
         face = Config.DEFAULT_FONT_FACE
     if font_size is None:
@@ -31,7 +32,38 @@ def draw_text(img, text, origin=(5,5), color=(255,255,255,255),
         origin = (w_size * w_rel, h_size * h_rel)
     font = ImageFont.truetype(face, font_size)
     d = ImageDraw.Draw(img)
-    d.text(origin, text, font=font, fill=(color), align=align)
+
+    # get size of actual text box
+    tw, th = d.textsize(text, font=font)
+    # optionally draw background box
+    if box_fill[3] > 0:
+        if box_width is None:
+            box_width = tw + 2
+        if box_height is None:
+            box_height = th + 2
+        bx, by = align_origin(origin, box_width, box_height, align)
+        d.rectangle((bx-1, by-1, bx + box_width - 1, by + box_height - 1), fill=box_fill)
+    # adjust text origin to desired alignment
+    origin = align_origin(origin, tw, th, align)
+    d.text(origin, text, font=font, fill=(color))
+
+
+def align_origin(origin, w, h, align=('left','top')):
+    """Calculates size of text box and returns an origin as if aligned
+    from the given origin.
+
+    Accepted alignments are:
+    left, center, right
+    top, center, bottom"""
+    if align==('left','top'):
+        return origin
+
+    aligns = {'left': 0, 'center': .5, 'right': 1, 'top': 0, 'bottom': 1}
+
+    ox, oy = origin
+
+    x_align, y_align = align
+    return (ox - (w * aligns[x_align]), oy + (h * aligns[y_align]))
 
 def img_to_string(img):
     with io.BytesIO() as output:
@@ -164,12 +196,16 @@ class Watermark:
 
 class VFXReference(Watermark):
     displays = {
-        'vfx_id' : {'rel_pos' : (.01, .01)},
-        'vfx_brief' : {'rel_pos': (.4, .01)},
+        'vfx_id' : {'rel_pos' : (.01, .01), 'box_fill': (0,0,0,64)},
+        'vfx_brief' : {'rel_pos': (.5, .01),
+                       'align': ('center', 'top'),
+                       'box_fill': (0,0,0,64)},
         }
     counters = {
-        'rec_start_tc' : {'rel_pos': (.01, .95)},
-        'frame_count_start' : {'rel_pos': (.95, .95)},
+        'rec_start_tc' : {'rel_pos': (.01, .95), 'box_fill': (0,0,0,64)},
+        'frame_count_start' : {'rel_pos': (.95, .95),
+                               'align': ('right', 'top'),
+                               'box_fill': (0,0,0,64)},
         }
 
 class RecBurn(Watermark):
