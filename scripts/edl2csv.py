@@ -99,6 +99,7 @@ def read_vfx_locators(events):
                 e.vfx_id = fields.pop(0)
                 e.vfx_brief = ''
                 e.vfx_element = ''
+                e.vfx_frame_count_start = 1009
                 if fields:
                     e.vfx_brief = fields.pop()
                 if fields:
