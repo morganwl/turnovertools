@@ -1,9 +1,12 @@
+import itertools
 import io
 import subprocess
 
 import ffmpeg
 from PIL import Image, ImageDraw, ImageFont
 from timecode import Timecode
+
+from . import fftools
 
 class Config:
     DEFAULT_SIZE = (1920, 1080)
@@ -35,12 +38,82 @@ def img_to_string(img):
         img.save(output, format="PNG")
         return output.getvalue()
 
+def framerate_to_float(framerate):
+    try:
+        framerate = float(framerate)
+    except ValueError:
+        dividend, divisor = framerate.split('/')
+        framerate = int(dividend) / int(divisor)
+    else:
+        if framerate == 23.98:
+            framerate = 23.976
+    return framerate
+
+def range_to_real_dur(start_tc, end_tc, framerate):
+    frames = (end_tc - start_tc).frames
+    framerate = framerate_to_float(framerate)
+    return frames / framerate
+
+def range_to_frames(start_tc, end_tc):
+    return (end_tc - start_tc).frames
+
+def build_ffmpeg_output(stream, outfile, dur, vcodec='libx264',
+                        acodec='aac', pix_fmt='yuv420p'):
+    return (
+        stream
+        .output(outfile, to=str(dur), vcodec=vcodec, acodec=acodec,
+                pix_fmt=pix_fmt)
+        )
+
+def build_ffmpeg_output_dnxhd(stream, outfile, dur, framerate, vbr):
+    return (
+        stream
+        .output(outfile, to=str(dur), vcodec='dnxhd', r=framerate,
+                video_bitrate=vbr, pix_fmt='yuv422p')
+        )
+
+def write_video_with_watermark(videofile, watermark, outfile=None,
+                               start=0, end=None, duration=None,
+                               scale=None, vcodec='libx264', acodec='aac'):
+    # assign an output file
+    if outfile is None:
+        outfile = videofile.mediapath.rsplit('.', 1)[0] + '_watermark.mp4'
+
+    # convert start Timecode to a fractional offset
+    if isinstance(start, Timecode):
+        ss = range_to_real_dur(videofile.src_start_tc, start,
+                               videofile.framerate)
+        
+    # convert end Timecode to a fractional duration
+    if isinstance(end, Timecode):
+        dur = range_to_real_dur(start, end, videofile.framerate)
+        dur_frames = range_to_frames(start, end)
+
+    vid_node = ffmpeg.input(videofile.mediapath, ss=str(ss))
+    wm_node = ffmpeg.input('pipe:', format='image2pipe', stream_loop=0)
+    stream = ffmpeg.overlay(vid_node, wm_node)
+    if vcodec == 'dnxhd':
+        stream = build_ffmpeg_output_dnxhd(stream, outfile, dur,
+                                           videofile.framerate,
+                                           videofile.bitrate)
+    else:
+        stream = build_ffmpeg_output(stream, outfile, dur,
+                                     vcodec, acodec)
+    pipe = stream.run_async(pipe_stdin=True, quiet=True,
+                            overwrite_output=True)
+
+    watermark.write_stream(dur_frames, pipe.stdin)
+
+    pipe.communicate()
+    pipe.stdin.close()
+    pipe.wait()
+
 
 class Watermark:
     displays = {}
     counters = {}
     
-    def __init__(self, size=None, speed=None, **kwargs):
+    def __init__(self, size=None, speed=None, mob=None, **kwargs):
         """
         Initializes watermark for a particular shot
         """
@@ -50,10 +123,17 @@ class Watermark:
             speed = dict()
         self.speed = speed
         self.size = size
-        for d in self.displays:
-            setattr(self, d, kwargs[d])
-        for c in self.counters:
-            setattr(self, c, kwargs[c])
+        # iter through displays and then counters
+        for field in itertools.chain(self.displays, self.counters):
+            # kwargs override any mob attributes
+            if field in kwargs:
+                val = kwargs[field]
+            else:
+                try:
+                    val = getattr(mob, field)
+                except AttributeError:
+                    raise Exception(f'{field} not given in kwargs and no mob provided.')
+            setattr(self, field, val)
     
     def write_still(self):
         img = blank_image()
@@ -82,13 +162,22 @@ class Watermark:
             img.save(stream, format="PNG", compress_level=0)
 
 
+class VFXReference(Watermark):
+    displays = {
+        'vfx_id' : {'rel_pos' : (.01, .01)},
+        'vfx_brief' : {'rel_pos': (.4, .01)},
+        }
+    counters = {
+        'rec_start_tc' : {'rel_pos': (.01, .95)},
+        'frame_count_start' : {'rel_pos': (.95, .95)},
+        }
 
 class RecBurn(Watermark):
     displays = {
         'sequence_name': { 'rel_pos' : (.01, .01) }
         }
     counters = {
-        'rec_tc_start' : { 'rel_pos' : (.01, .9) }
+        'rec_start_tc' : { 'rel_pos' : (.01, .9) }
         }
 
 if __name__ == '__main__':
