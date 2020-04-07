@@ -16,7 +16,7 @@ class Config(object):
                       'rec_end_tc', 'src_start_tc', 'src_end_tc',
                       'track', 'sequence_name', 'vfx_id',
                       'vfx_element', 'vfx_brief', 'vfx_loc_tc',
-                      'vfx_loc_color']
+                      'vfx_loc_color', 'frame_count_start']
 
 def change_ext(filename, ext):
     return os.path.splitext(filename)[0] + ext
@@ -96,16 +96,16 @@ def read_vfx_locators(events):
                 # with the vfx_id at the front of the string and then
                 # popping decreasingly important fields from the back
                 fields.pop(0)
-                e.vfx_id = fields.pop(0)
+                e.vfx_id = fields.pop(0).strip()
                 e.vfx_brief = ''
                 e.vfx_element = ''
-                e.vfx_frame_count_start = 1009
+                e.frame_count_start = 1009
                 if fields:
-                    e.vfx_brief = fields.pop()
+                    e.vfx_brief = fields.pop().strip()
                 if fields:
-                    e.vfx_element = fields.pop()
+                    e.vfx_element = fields.pop().strip()
                 e.vfx_loc_tc = e.src_tc_at(tc)
-                e.vfx_loc_color = color
+                e.vfx_loc_color = color.strip()
 
 def make_subcaps(events):
     subcaps = list()
