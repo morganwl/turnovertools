@@ -77,6 +77,7 @@ class TestVFXReference(unittest.TestCase):
                                      (os.listdir(
                     REFERENCE_QT_CONTROL_DIR)) if not file.startswith('.'))
 
+    @unittest.skip("Don't want to run the watermark output any more times than we have to until we get tighter test samples.")
     def test_vfx_reference_count(self):
         with tempfile.TemporaryDirectory() as outputdir:
             vfxreference.main(self.vfxlist, self.mediadir, outputdir)
