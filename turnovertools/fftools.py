@@ -13,7 +13,7 @@ from timeit import timeit
 
 import cv2
 import ffmpeg
-from skimage.measure import compare_ssim as ssim
+# from skimage.measure import compare_ssim as ssim
 from timecode import Timecode
 
 from turnovertools import fftools
@@ -148,10 +148,11 @@ def probe_timecode(video):
 ##
 # frame processing functions
 
-def compare(image, other):
-    image = cvdecode(image)
-    other = cvdecode(other)
-    return ssim(image, other, multichannel=True)
+# removing scikit-image functions for now
+#def compare(image, other):
+#    image = cvdecode(image)
+#    other = cvdecode(other)
+#    return ssim(image, other, multichannel=True)
 
 def mse(image, other):
     image = cvdecode(image)
