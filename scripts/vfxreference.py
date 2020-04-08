@@ -6,11 +6,7 @@ import sys
 import edl
 from timecode import Timecode
 
-from turnovertools import fftools, vfxlist, watermark
-
-
-class Config(object):
-    pass
+from turnovertools import fftools, vfxlist, watermark, Config
 
 
 def read_csv(inputfile):
