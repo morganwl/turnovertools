@@ -3,6 +3,7 @@
 import csv
 import os
 import sys
+import tempfile
 
 import edl
 from timecode import Timecode
@@ -14,7 +15,7 @@ from turnovertools.subcap import Subcap
 class Config(object):
     OUTPUT_COLUMNS = ['clip_name', 'reel', 'rec_start_tc',
                       'rec_end_tc', 'src_start_tc', 'src_end_tc',
-                      'track', 'sequence_name', 'vfx_id',
+                      'framerate', 'track', 'sequence_name', 'vfx_id',
                       'vfx_element', 'vfx_brief', 'vfx_loc_tc',
                       'vfx_loc_color', 'frame_count_start']
 
@@ -90,7 +91,6 @@ def read_vfx_locators(events):
             tc = l[7:18]
             color, comment = l[19:].split(' ', 1)
             if comment.startswith('VFX='):
-                print(e.src_start_tc.framerate)
                 fields = comment.split('=')
                 # Allow for missing fields in the middle by starting
                 # with the vfx_id at the front of the string and then
@@ -136,12 +136,21 @@ def main(inputfile, outputfile=None, **kwargs):
         dirname = os.path.basename(inputfile)
         basepath = os.path.abspath(inputfile)
         inputfile = list()
-        outputfile = os.path.join(basepath, dirname + '.csv')
+        if outputfile is None:
+            outputfile = os.path.join(basepath, dirname + '.csv')
         for file in os.listdir(basepath):
             if file.lower().endswith('.edl'):
                 inputfile.append(os.path.join(basepath, file))
     else:
         inputfile = [ inputfile ]
+
+    # optionally create a temporary output file *which will not be deleted on exit. This is meant for a FileMaker script that will delete the file after reading it.
+    if outputfile == ':temp':
+        # tmpdir = os.path.expanduser('~')
+        with tempfile.NamedTemporaryFile(mode='wt', suffix='.csv',
+                                         delete=False) as tf:
+            outputfile = tf.name
+        print(os.path.realpath(outputfile))
     
     events = events_from_edl(inputfile)
     remove_filler(events)
@@ -157,4 +166,4 @@ def main(inputfile, outputfile=None, **kwargs):
     Subcap.write(change_ext(outputfile, '_subcap.txt'), subcaps)
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(*sys.argv[1:])
