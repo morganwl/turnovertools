@@ -5,17 +5,17 @@ import os
 import sys
 import tempfile
 
-import edl
+# import edl
 from timecode import Timecode
 
 from turnovertools.edlobjects import EDLEvent
-from turnovertools import csvobjects
+from turnovertools import csvobjects, edl
 from turnovertools.subcap import Subcap
 
 class Config(object):
     OUTPUT_COLUMNS = ['clip_name', 'reel', 'rec_start_tc',
                       'rec_end_tc', 'src_start_tc', 'src_end_tc',
-                      'framerate', 'track', 'sequence_name', 'vfx_id',
+                      'src_framerate', 'track', 'sequence_name', 'vfx_id',
                       'vfx_element', 'vfx_brief', 'vfx_loc_tc',
                       'vfx_loc_color', 'frame_count_start']
 
@@ -26,58 +26,8 @@ def sort_by_tc(events):
     events.sort(key=lambda e: (e.rec_start_tc.frames, e.track))
     return events
 
-def events_from_edl(edl_files):
-    tmp_events = list()
-    seq_start = Timecode('23.98', '23:59:59:23')
-    edit_lists = list()
-    for file in edl_files:
-        edit_list = import_edl(file)
-        edit_list.filename = os.path.basename(file)
-        if edit_list.get_start().frames < seq_start.frames:
-            seq_start = edit_list.get_start()
-        edit_lists.append(edit_list)
-    events = list()
-    for l in edit_lists:
-        for e in l:
-            if e.has_transition():
-                # to the best I can tell, the event before
-                # has_transition is a dummy event
-                del events[-1]
-                add_transition_out(events[-1], e)
-                add_transition_in(e, e.next_event)
-                continue
-            events.append(EDLEvent(seq_start, e))
-            e.sequence_name = l.title
-            e.track = fn_to_track(l.filename)
-    return events
-
-def add_transition_out(e, tr):
-    if e is None or e.rec_end_tc != tr.rec_start_tc:
-        # skip instances where the prior event does not exist or does
-        # not precede the transition (like if transition is first
-        # event in a track)
-        return
-    e.src_end_tc += int(e.speed * tr.incoming_transition_duration())
-    e.rec_end_tc = tr.rec_end_tc
-
-def add_transition_in(tr, e):
-    if e is None or tr.rec_end_tc != e.rec_start_tc:
-        return
-    speed = e.src_length() / e.rec_length()
-    e.src_start_tc -= int(speed * tr.incoming_transition_duration())
-    e.rec_start_tc = tr.rec_start_tc
-
-def get_src_end_with_transition(e, tr_end_tc):
-    fade_duration = e
-
 def fn_to_track(fn):
     return change_ext(fn, '').rsplit('_', 1)[1].replace('V', '')
-
-def import_edl(edl_file):
-    parser = edl.Parser('23.98')
-    with open(edl_file) as fh:
-        edit_list = parser.parse(fh)
-    return edit_list
 
 def remove_filler(events):
     for e in events:
@@ -144,7 +94,9 @@ def main(inputfile, outputfile=None, **kwargs):
     else:
         inputfile = [ inputfile ]
 
-    # optionally create a temporary output file *which will not be deleted on exit. This is meant for a FileMaker script that will delete the file after reading it.
+    # optionally create a temporary output file *which will not be
+    # deleted on exit. This is meant for a FileMaker script that will
+    # delete the file after reading it.
     if outputfile == ':temp':
         # tmpdir = os.path.expanduser('~')
         with tempfile.NamedTemporaryFile(mode='wt', suffix='.csv',
@@ -152,7 +104,7 @@ def main(inputfile, outputfile=None, **kwargs):
             outputfile = tf.name
         print(os.path.realpath(outputfile))
     
-    events = events_from_edl(inputfile)
+    events = edl.events_from_edl(inputfile)
     remove_filler(events)
     sort_by_tc(events)
     read_vfx_locators(events)
