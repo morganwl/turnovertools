@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""Reads an EDL of a cut and attempts to construct still images, video
+reference and metadata spreadsheet for Google RYG (Red,Yellow,Green)
+footage clearance process."""
+
 import argparse
 import collections
 import csv
@@ -12,7 +16,6 @@ import sys
 import edl
 import ffmpeg
 from timecode import Timecode
-# from selenium import webdriver
 
 from turnovertools.edlobjects import EDLEvent
 from turnovertools import linkfinder, csvobjects
@@ -30,9 +33,13 @@ class Config(object):
                  linkfinder.FilmSupplyMatcher() ]
 
 def change_ext(filename, ext):
+    """Replaces extension of filename with a new extension. (Can be used
+    to add pre-extension suffixes as well as change extensions.)"""
     return os.path.splitext(filename)[0] + ext
 
 def events_from_edl(edl_files):
+    """Parses and returns a list of events contained in a list of EDL
+    filepaths."""
     tmp_events = list()
     seq_start = Timecode('23.98', '23:59:59:23')
     for file in edl_files:
@@ -46,10 +53,12 @@ def events_from_edl(edl_files):
     return events
 
 def sort_by_tc(events):
+    """Sorts events by the rec_start_tc attribute."""
     events.sort(key=lambda e: (e.rec_start_tc.frames, e.track))
-    return events
 
 def import_edl(edl_file):
+    """Imports and parses an EDL file, returns a list of events and the
+    start time for the first event of the EDL.."""
     parser = edl.Parser('23.98')
     with open(edl_file) as fh:
         edit_list = parser.parse(fh)
@@ -57,6 +66,7 @@ def import_edl(edl_file):
     return edit_list.events, seq_start
 
 def remove_filler(events):
+    """Removes blank events."""
     for e in events:
         if e.reel is None:
             events.remove(e)
@@ -93,31 +103,6 @@ def output_csv(events, columns, csvfile):
                 val = e.get_custom(col)
             row.append(val)
         writer.writerow(row)
-
-# removing Selenium functions for now
-# def output_link_tests(events, basedir):
-#    if not os.path.isdir(basedir):
-#        os.mkdir(basedir)
-#    options = webdriver.ChromeOptions()
-#    options.add_argument('headless')
-#    driver = webdriver.Chrome(chrome_options=options)
-#    seen_links = dict()
-#    for e in events:
-#        if 'http' in e.link:
-#            img_name = Config.FRAME_NAMING_CONVENTION.\
-#                format(e.number, e.clip_name).replace('.jpg', '.png')
-#            img_name = os.path.join(basedir, img_name)
-#            if e.link in seen_links:
-#                shutil.copyfile(seen_links[e.link], img_name)
-#                continue
-#            try:
-#                driver.get(e.link)
-#            except:
-#                pass
-#            else:
-#                driver.save_screenshot(img_name)
-#                seen_links[e.link] = img_name            
-#    driver.quit()        
 
 def jpeg_from_pipe(process):
     buffer = []
