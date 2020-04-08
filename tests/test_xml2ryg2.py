@@ -17,16 +17,16 @@ from turnovertools import mediaobject, linkfinder
 TEST_FILES = os.path.join(TEST_DIR, 'test_files')
 
 # look for private test files in the home user directory that are not tracked by git
-PRIVATE_TEST_FILES = os.path.join(USER_HOME, 'private_test_files', 'turnovertools')
+PRIVATE_TEST_FILES = os.path.join(USER_HOME, 'private_test_files', 'turnovertools', 'ryg')
 TEST_EDL = os.path.join(PRIVATE_TEST_FILES, 'LG_R1_20200303_v34.Copy.01.edl')
 
 class TestXml2ryg2Internals(unittest.TestCase):
     def setUp(self):
-        self.input = TEST_EDL
-        self.events = xml2ryg2.events_from_edl(TEST_EDL)
+        self.input = [ TEST_EDL ]
+        self.events = xml2ryg2.events_from_edl(self.input)
 
     def test_input_edl(self):
-        events = xml2ryg2.events_from_edl(TEST_EDL)
+        events = xml2ryg2.events_from_edl(self.input)
         for i, e in enumerate(events):
             with self.subTest(i=i):
                 self.assertIsInstance(e, mediaobject.Event)
