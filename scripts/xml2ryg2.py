@@ -12,7 +12,7 @@ import sys
 import edl
 import ffmpeg
 from timecode import Timecode
-from selenium import webdriver
+# from selenium import webdriver
 
 from turnovertools.edlobjects import EDLEvent
 from turnovertools import linkfinder, csvobjects
@@ -94,29 +94,30 @@ def output_csv(events, columns, csvfile):
             row.append(val)
         writer.writerow(row)
 
-def output_link_tests(events, basedir):
-    if not os.path.isdir(basedir):
-        os.mkdir(basedir)
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    driver = webdriver.Chrome(chrome_options=options)
-    seen_links = dict()
-    for e in events:
-        if 'http' in e.link:
-            img_name = Config.FRAME_NAMING_CONVENTION.\
-                format(e.number, e.clip_name).replace('.jpg', '.png')
-            img_name = os.path.join(basedir, img_name)
-            if e.link in seen_links:
-                shutil.copyfile(seen_links[e.link], img_name)
-                continue
-            try:
-                driver.get(e.link)
-            except:
-                pass
-            else:
-                driver.save_screenshot(img_name)
-                seen_links[e.link] = img_name            
-    driver.quit()        
+# removing Selenium functions for now
+# def output_link_tests(events, basedir):
+#    if not os.path.isdir(basedir):
+#        os.mkdir(basedir)
+#    options = webdriver.ChromeOptions()
+#    options.add_argument('headless')
+#    driver = webdriver.Chrome(chrome_options=options)
+#    seen_links = dict()
+#    for e in events:
+#        if 'http' in e.link:
+#            img_name = Config.FRAME_NAMING_CONVENTION.\
+#                format(e.number, e.clip_name).replace('.jpg', '.png')
+#            img_name = os.path.join(basedir, img_name)
+#            if e.link in seen_links:
+#                shutil.copyfile(seen_links[e.link], img_name)
+#                continue
+#            try:
+#                driver.get(e.link)
+#            except:
+#                pass
+#            else:
+#                driver.save_screenshot(img_name)
+#                seen_links[e.link] = img_name            
+#    driver.quit()        
 
 def jpeg_from_pipe(process):
     buffer = []
@@ -224,14 +225,15 @@ def main(inputfile, outputfile=None, videofile=None,
     output_columns = Config.OUTPUT_COLUMNS
 
     if os.path.isdir(inputfile):
+        inputfile = inputfile.rstrip('/')
         dirname = os.path.basename(inputfile)
         basepath = os.path.abspath(inputfile)
         inputfile = list()
         outputfile = os.path.join(basepath, dirname + '.csv')
         print(dirname)
         for file in os.listdir(basepath):
-            if (file.lower().endswith('.mov') or file.lower().endswith('.mxf')) and\
-            not nopicture:
+            if (file.lower().endswith('.mov') or \
+                    file.lower().endswith('.mxf')) and not nopicture:
                 frameoutput = os.path.join(basepath, dirname + '_frames')
                 videooutput = os.path.join(basepath, dirname + '_video')
                 videofile = os.path.join(basepath, file)
