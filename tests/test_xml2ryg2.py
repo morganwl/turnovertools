@@ -1,4 +1,5 @@
 import csv
+import contextlib
 import logging
 import os
 import sys
@@ -23,10 +24,12 @@ TEST_EDL = os.path.join(PRIVATE_TEST_FILES, 'LG_R1_20200303_v34.Copy.01.edl')
 class TestXml2ryg2Internals(unittest.TestCase):
     def setUp(self):
         self.input = [ TEST_EDL ]
-        self.events = xml2ryg2.events_from_edl(self.input)
+        with open(os.devnull, 'w') as null, contextlib.redirect_stdout(null):
+            self.events = xml2ryg2.events_from_edl(self.input)
 
     def test_input_edl(self):
-        events = xml2ryg2.events_from_edl(self.input)
+        with open(os.devnull, 'w') as null, contextlib.redirect_stdout(null):
+            events = xml2ryg2.events_from_edl(self.input)
         for i, e in enumerate(events):
             with self.subTest(i=i):
                 self.assertIsInstance(e, mediaobject.Event)
@@ -61,7 +64,8 @@ class TestXml2ryg2Internals(unittest.TestCase):
 
     #@unittest.skip('')
     def test_all_matchers(self):
-        xml2ryg2.process_events(self.events)
+        with open(os.devnull, 'w') as null, contextlib.redirect_stdout(null):
+            xml2ryg2.process_events(self.events)
         for e in self.events:
             with self.subTest(tape=e.reel):
                 self.assertIsNotNone(e.link)
