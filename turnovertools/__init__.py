@@ -2,14 +2,19 @@
 
 __version__ = '0.0.3'
 
+from .config import Config
+
 from . import (
     mediaobject,
     xmlparser,
     xmlobjects,
     csvobjects,
     edlobjects,
+    edl,
     linkfinder,
     subcap,
-    vfxlist
+    vfxlist,
+    interface
 )
 
+from .video import output
