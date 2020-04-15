@@ -24,7 +24,7 @@ def flag_mixed_rate(evt, line):
 def apply_timewarp_fps(evt):
     for c in evt.comments:
         if c.startswith('*TIMEWARP EFFECT'):
-            return    
+            return
     if evt._src_start_tc_overflow:
         evt.src_start_tc = detruncate_timecode(evt.src_start_tc,
                                                evt.timewarp.warp_fps)
@@ -115,3 +115,36 @@ def import_edl(edl_file):
     with open(edl_file) as fh:
         edit_list = parser.parse(fh)
     return edit_list
+
+def dummy_events():
+    """Returns an iterator of dummy EDL events for testing."""
+    yield edl.Event(dict(num='000001', reel='C042C004_130101_C4PZ',
+                         tr_code='V', aux='C',
+                         src_start_tc=Timecode('23.976', '14:07:31:11'),
+                         src_end_tc=Timecode('23.976', '14:07:33:03'),
+                         rec_start_tc=Timecode('23.976', '01:00:00:00'),
+                         rec_end_tc=Timecode('23.976', '01:00:01:16'),
+                         clip_name='LG_VFX_R5_010'))
+    yield edl.Event(dict(num='000002', reel='C011C001_150831_C4PZ',
+                         tr_code='V', aux='C',
+                         src_start_tc=Timecode('23.976', '14:44:36:02'),
+                         src_end_tc=Timecode('23.976', '14:44:39:11'),
+                         rec_start_tc=Timecode('23.976', '01:00:01:16'),
+                         rec_end_tc=Timecode('23.976', '01:00:05:01'),
+                         clip_name='LG_VFX_R5_020'))
+    yield edl.Event(dict(num='000003', reel='C011C004_150831_C4PZ',
+                         tr_code='V', aux='C',
+                         src_start_tc=Timecode('23.976', '15:06:17:22'),
+                         src_end_tc=Timecode('23.976', '15:06:20:17'),
+                         rec_start_tc=Timecode('23.976', '01:00:05:01'),
+                         rec_end_tc=Timecode('23.976', '01:00:07:20'),
+                         clip_name='LG_VFX_R5_030'))
+
+def dummy_list():
+    """Returns a dummy EDL list for testing."""
+    dummy_list = edl.List('23.976')
+    dummy_list.title = 'simple_vfx_pull_23976'
+    dummy_list.fcm = 'NON-DROP FRAME'
+    for event in dummy_events():
+        dummy_list.append(event)
+    return dummy_list
