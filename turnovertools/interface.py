@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Shared user interface functions for turnovertools."""
 
+import warnings
 import os
 
-class Input(object):
+class UserInput(object):
     """Organizes various input objects."""
 
     def __init__(self, inputfile, outputfile=None, outputdir=None, **kwargs):
@@ -47,3 +48,7 @@ class Input(object):
         self.output_edl = os.path.join(self.outputdir, basename + '.edl')
         self.output_base = basename
 
+class Input(UserInput):
+    def __init__(self, *args, **kwargs):
+        warnings.warn(f'{os.path.basename(__file__)}.{type(self)} is deprecated. Please use {type(super())} instead.')
+        super().__init__(*args, **kwargs)
