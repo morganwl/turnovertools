@@ -7,10 +7,7 @@ footage clearance process."""
 import argparse
 import collections
 import csv
-from itertools import chain
 import os
-import re
-import shutil
 import sys
 
 import edl
@@ -20,7 +17,7 @@ from timecode import Timecode
 from turnovertools.edlobjects import EDLEvent
 from turnovertools import linkfinder, csvobjects
 
-class Config(object):
+class Config:
     OUTPUT_COLUMNS = ['Number', 'clip_name', 'reel', 'Link', 'NOTES',
                       'Footage Type', 'Footage Source', 'rec_start_tc',
                       'rec_end_tc', 'src_start_tc', 'src_end_tc', 'signature']
@@ -28,9 +25,9 @@ class Config(object):
     FRAME_NAMING_CONVENTION = '{:03}_{}.jpg'
     VIDEO_NAMING_CONVENTION = '{:03}_{}.mp4'
     VIDEO_SCALE = '960x540'
-    MATCHERS = [ linkfinder.GettyMatcher(), linkfinder.GettyVideoMatcher(),
-                 linkfinder.ShutterMatcher(), linkfinder.ShutterVideoMatcher(),
-                 linkfinder.FilmSupplyMatcher() ]
+    MATCHERS = [linkfinder.GettyMatcher(), linkfinder.GettyVideoMatcher(),
+                linkfinder.ShutterMatcher(), linkfinder.ShutterVideoMatcher(),
+                linkfinder.FilmSupplyMatcher()]
 
 def change_ext(filename, ext):
     """Replaces extension of filename with a new extension. (Can be used
@@ -91,9 +88,9 @@ def process_events(events, ale_file=None, footage_tracker=None):
 
 def output_csv(events, columns, csvfile):
     writer = csv.writer(csvfile)
-    
+
     writer.writerow(csvobjects.CSVEvent.convertColumns(columns))
-    
+
     for e in events:
         row = []
         for col in columns:
@@ -108,7 +105,7 @@ def jpeg_from_pipe(process):
     buffer = []
     dangling_code = False # in case an end code straddles two chunks
     chunk = process.stdout.read()
-    
+
     # keep reading chunks off of stdout until the process terminates
     while len(chunk) or process.poll() is None:
         while len(chunk):
@@ -133,7 +130,7 @@ def jpeg_from_pipe(process):
                 else:
                     dangling_code = False
                 buffer.append(chunk)
-        chunk = process.stdout.read()    
+        chunk = process.stdout.read()
 
 def output_frames(events, videofile, outdir):
     # create a dictionary of frames, where each key corresponds to a
@@ -155,7 +152,7 @@ def output_frames(events, videofile, outdir):
         .filter('scale', Config.FRAME_SIZE)
         .output('pipe:', format='image2pipe', vcodec='mjpeg', q=1, vsync=0)
     )
-    
+
     process = ffmpeg.run_async(ffmpeg_command, pipe_stdout=True,
                                pipe_stderr=True)
 
@@ -175,7 +172,7 @@ def output_video(events, videofile, outdir):
         os.mkdir(outdir)
     for e in events:
         rec_start_seconds = int(e.rec_start_frame) / 23.976
-        rec_duration_seconds = (int(e.rec_end_frame) - 
+        rec_duration_seconds = (int(e.rec_end_frame) -
                                 int(e.rec_start_frame) + 1) / 23.976
         video_name = Config.VIDEO_NAMING_CONVENTION.format(
             e.number, e.clip_name)
@@ -231,7 +228,7 @@ def main(inputfile, outputfile=None, videofile=None,
                 footage_tracker = os.path.join(basepath, file)
     else:
         inputfile = [ inputfile ]
-    
+
     events = events_from_edl(inputfile)
     remove_filler(events)
     sort_by_tc(events)
