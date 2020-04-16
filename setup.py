@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
+"""Setup for turnovertools package."""
+
 import setuptools
+
+# pylint: disable=invalid-name
+# naming conventions per Python packaging guide
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="turnovertools-morgan",
-    version="0.0.4",
+    version="0.0.5",
     author="Morgan Wajda-Levie",
     author_email="morgan.wajdalevie@gmail.com",
     description="Tools for processing Avid Media Composer turnovers.",
