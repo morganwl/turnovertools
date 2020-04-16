@@ -1,16 +1,35 @@
 # turnovertools
 tools for processing Avid Media Composer turnovers
 
+Development is erratic, chasing around to follow actual tasks on the job.
+
 ## Changelog
+
+### 0.0.5 04.15-2020
+
+- To-Do:
+  - Write full testsuite for xml2ryg
+  - Rename xml2ryg to ryglist
+  - Work on refactoring and improving codebase of ryglist
+  - Focus on tests across the board
+
+### 0.0.4 04.15-2020
+
+- added VFX list support
+  - read EDLs and extract vfx list based on markers
+  - create pull EDLs and ALEs
+  - create VFX reference with appropriate burnins
+  - limited integration with FileMaker
 
 ### 0.0.3 02.03-2020
 
-- build and use source tables
-  - build source table from ale, xml or edl
-  - fill in metadata from existing source table for xml and edl
-    imports
-  - output source table in human readable format
-  - allow editing of source table
+- (NONE OF THIS HAPPENED)
+  - build and use source tables
+    - build source table from ale, xml or edl
+    - fill in metadata from existing source table for xml and edl
+      imports
+    - output source table in human readable format
+    - allow editing of source table
 
 - Stretch
   - Explore using MobID in XML or AAF to find source media on drive
