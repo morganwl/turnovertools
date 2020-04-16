@@ -78,7 +78,7 @@ def frame_iterator(process, size):
 def interval_stream_frames(vid, interval=2, probe=None, **kwargs):
     if probe is None:
         probe = ffmpeg.probe(vid)
-    vidinfo = next((stream for stream in probe['streams'] if 
+    vidinfo = next((stream for stream in probe['streams'] if
                     stream['codec_type'] == 'video'), None)
     fps = vidinfo['r_frame_rate']
     try:
@@ -122,6 +122,7 @@ def probe_clip(video):
     clip.framerate = vid_stream['r_frame_rate']
     clip.duration = Timecode(clip.framerate,
                              start_seconds=float(probe['format']['duration']))
+    clip.duration_seconds = probe['format']['duration']
     if 'timecode' in probe['format']['tags']:
         clip.src_start_tc = Timecode(
             clip.framerate, probe['format']['tags']['timecode'])
@@ -160,7 +161,7 @@ def mse(image, other):
     err = np.sum((image.astype('float') - other.astype('float')) ** 2)
     err /= float(image.shape[0] * other.shape[1])
     return err
-    
+
 def cvdecode(image):
     image = np.frombuffer(image, dtype='uint8')
     image = cv2.imdecode(image, cv2.IMREAD_GRAYSCALE)
