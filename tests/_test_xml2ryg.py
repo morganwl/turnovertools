@@ -1,14 +1,10 @@
 import csv
-import logging
 import os
 import sys
 import tempfile
 import unittest
 
-TEST_DIR = os.path.dirname(__file__)
-MAIN_DIR = os.path.join(TEST_DIR, os.pardir)
-
-sys.path.insert(0, MAIN_DIR)
+from shared_test_setup import get_scripts
 
 from scripts import xml2ryg
 from turnovertools import mediaobject
@@ -49,10 +45,10 @@ class TestXml2RygCLI(unittest.TestCase):
             # read in the csv output
             reader = csv.reader(self.temp_output)
             columns = next(reader)
-            
+
             for file in sorted(os.listdir(video_dir)):
                 with self.subTest(file=file):
-                    # test that file names match csv rows                   
+                    # test that file names match csv rows
                     row = next(reader)
                     num, clip_name = file.split('_', 1)
                     self.assertEqual(int(num), int(row[0]))
@@ -78,7 +74,7 @@ class TestXml2RygCLI(unittest.TestCase):
                         end = frame.read(2)
                         self.assertEqual(beginning, b'\xff\xd8\xff')
                         self.assertEqual(end, b'\xff\xd9')
-                        
+
                         # test that file names match csv rows
                         row = next(reader)
                         num, clip_name = file.split('_', 1)
@@ -95,7 +91,7 @@ class TestXml2RygCLI(unittest.TestCase):
         # call xml2ryg with the path of our temporary file as the
         # output option
         xml2ryg.main(self.test_xml, self.temp_output.name)
-        
+
         # compare column output to expected columns
         reader = csv.reader(self.temp_output)
         output_columns = next(reader)
@@ -103,14 +99,14 @@ class TestXml2RygCLI(unittest.TestCase):
 
         # read in output rows
         output_rows = list(reader)
-        
+
         # compare output rows to expected rows, one column at a time
         for column_number, column in enumerate(expected_columns):
-            
+
             # temporarily skip signature column
             if column == 'signature':
                 continue
-            
+
             with self.subTest(column=column):
                 for row_number, row in enumerate(output_rows):
                     # print(column, row)
@@ -145,8 +141,8 @@ class TestXml2rygInternals(unittest.TestCase):
             previous_track = this_track
 
     def test_remove_filler(self):
-        expected_filler_indices = [1, 90, 257, 273, 276, 279, 287, 293, 
-                                   297, 299, 302, 307, 309, 311, 313, 
+        expected_filler_indices = [1, 90, 257, 273, 276, 279, 287, 293,
+                                   297, 299, 302, 307, 309, 311, 313,
                                    315, 320, 322, 323, 324]
         for i, e in enumerate(self.events):
             remove_filler = xml2ryg.remove_filler(e)
