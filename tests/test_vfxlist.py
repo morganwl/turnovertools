@@ -12,7 +12,7 @@ MAIN_DIR = os.path.join(TEST_DIR, os.pardir)
 
 sys.path.insert(0, MAIN_DIR)
 
-from test_vfxevent import get_sample_vfxevent_data
+from tests.test_mobs import get_sample_vfxevent_data
 from turnovertools import vfxlist
 
 # look for private test files in the home user directory that are not

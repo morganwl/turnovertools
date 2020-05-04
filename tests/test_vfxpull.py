@@ -11,8 +11,8 @@ import unittest
 
 from timecode import Timecode
 
-from shared_test_setup import get_private_test_files
-from shared_test_setup import get_scripts
+from tests.shared_test_setup import get_private_test_files
+from tests.shared_test_setup import get_scripts
 
 from scripts import vfxpull
 from turnovertools import mediaobjects as mobs

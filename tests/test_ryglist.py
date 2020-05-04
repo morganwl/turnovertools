@@ -10,9 +10,8 @@ import os
 import tempfile
 import unittest
 
-from shared_test_setup import get_private_test_files, AcceptanceCase
-from shared_test_setup import listdir_path
-import standards
+from tests.shared_test_setup import get_private_test_files, AcceptanceCase
+from tests.shared_test_setup import listdir_path
 
 from scripts import ryglist
 from turnovertools import mediaobject, linkfinder, fftools
@@ -112,8 +111,114 @@ class TestRYGListAcceptance(unittest.TestCase, AcceptanceCase):
     def test_output_videos(self):
         """Inputs an EDL and compares the resulting videos to control
         samples."""
+        self.populate_temp_dir(get_simple_test_with_ext('edl'),
+                               get_simple_test_with_ext('mxf'))
+        with open(os.devnull, 'w') as null, contextlib.redirect_stdout(null):
+            ryglist.main(self.tempdir)
+        output_dir = self.get_output(f'{self.basename}_video')
+        expected_dir = get_simple_control_with_suffix('video')
+        output_videos = os.listdir(output_dir)
+        expected_videos = os.listdir(expected_dir)
+        for output, expected in zip_longest(output_videos,
+                                            expected_videos):
+            self.assertEqual(output, expected)
+            output_path = os.path.join(output_dir, output)
+            expected_path = os.path.join(expected_dir, expected)
+            self.assertVideoMetadataEqual(output_path, expected_path)
+            for error in self.compare_vid_samples(output_path, expected_path):
+                self.assertLess(error, 10, f'{output} and {expected}')
 
+@unittest.skip('Proposed new test structure')
+class TestRYGListUnits(unittest.TestCase):
+    """Test components of ryglist."""
 
+    def setUp(self):
+        self.edls = list(get_test_files(f'ryg_three_tracks_V{num}') for num
+                         in range(1, 4))
+
+    def test_edl_input(self):
+        """Accepts a group of EDLs and returns a mobs.Sequence object
+        containing mobs.Event objects. Sequence object mirror EDL
+        structure as closely as possible:
+          - multiple tracks"""
+        # Requires: edl Parser library (EXTERNAL)
+        # edl to mobs.Sequence and mobs.Event adapter functions
+        # mobs.Sequence and mobs.Event objects
+
+        # spool 3 EDLs, each with 2 non-filler events, with different
+        # starting timecodes, into 3 temporary files
+        sequence = ryglist.input_edls(self.edls)
+        self.assertEqual(len(sequence.tracks), 3)
+        self.assertEqual(len(sequence.events), 6)
+        self.assertEqual(str(sequence.rec_start_tc), '01:00:00:00')
+        self.assertEqual(str(sequence.rec_end_tc), '01:00:04:11')
+        self.assertEqual(len(sequence.flatten()), 6)
+
+    def test_update_from_source_table(self):
+        """Accepts a mobs.Sequence object and pulls requested metadata
+        from a source table for each event."""
+        # Requires: mobs.Source object with ability to match to Event
+        # Persistent storage for mobs.Source object
+
+    def test_frame_output(self):
+        """Accepts a mobs.Sequence object, with an attached media file, and
+        exports a single frame for each event in the sequence. Frames could
+        be either from the head of each event, or from the middle.
+
+        Extracting an individual frame from a sequence is fairly
+        straightforward, but extracting a large number of frames from a
+        single sequence seems to be trickier if we want to be time-efficient.
+
+        Profile performance difference between discrete ffmpeg instances
+        for each event and extracting a stream of frames from one ffmpeg
+        instance."""
+        # Requires: mobs.Sequence object with video output capabilities
+        # mobs.Event object with src frame to rec frame conversion
+        # ability to create multiple frame grabs from single video frame
+        sequence = ryglist.input_edls(self.edls)
+        sequence.mediapath = get_test_files('ryg_three_tracks.mxf')
+        outputdir = tempfile.TemporaryDirectory()
+        sequence.output_event_posters(outputdir=outputdir.name, offset='middle')
+        for event in sequence.flatten():
+            jpeg = f'{event.ref_name}.jpg'
+            output_file = os.path.join(outputdir.name, jpeg)
+            self.assertTrue(os.path.isfile(output_file))
+            self.assertEqual(os.stat(output_file).st_size,
+                             os.stat(get_control(jpeg)).st_size)
+
+    def test_export_csv(self):
+        """Exports a csv for each event, including requested information
+        from source table. CSV row numbers should match frame output
+        numbers."""
+        # Requires: to_dict() method for mobs.Event
+
+    # rethinking the structure for ryglist
+    # abstractly, ryglist has the following functions:
+    # - export an image for every shot in an EDL, named according to the shot
+    # - export a video for every shot in an EDL, named according to the shot
+    # - export a table of all shots in the EDL, collated with additional source
+    #   metadata
+    # - attempt to gather source metadata from a variety of sources
+
+    # a fundamental flaw of ryglist is that it attempts to collect metadata from
+    # raw sources on every run.
+    # metadata needs to be stored separately in a sourcetable, which can be
+    # updated and maintained as needed.
+    # footage_tracker.csv performs some of this function, but we need to do
+    # better.
+    # we need FileMaker integration.
+
+    # so what are the elements of ryglist?
+    # - a sequence parser
+    #   - draw from edl library, but convert into our own mobs.Event object
+    # - a sequence frame/video extracter
+    # - a source table
+    #   - source table should have separate utilities for scraping information
+
+    # Development plan:
+    # Start by writing a source table module and replacing linkfinder
+
+# to replace
 class TestRYGInternals(unittest.TestCase):
     """Test the internal steps of ryglist"""
     def setUp(self):
@@ -169,6 +274,7 @@ class TestRYGInternals(unittest.TestCase):
             with self.subTest(tape=event.reel):
                 self.assertIsNotNone(event.link)
 
+# to replace
 class TestLinkfinderMatchers(unittest.TestCase):
     """Test the Linkfinder matchers that try to populate the link attribute
     of events based on source name, EDL, and getty links."""
@@ -178,7 +284,3 @@ class TestLinkfinderMatchers(unittest.TestCase):
     def test_GETTYIMAGES_520720101_01_LOW_RES(self):
         """Confirm that Linkfinder finds something for a given image."""
         self.assertIsNotNone(linkfinder.process('GETTYIMAGES-520720101-01-LOW_RES', self.matchers))
-
-class TestRYGStandard2(unittest.TestCase, standards.Standard2):
-    """Temporary tests to refactor ryglist to be more uniform with the
-    the rest of turnovertools."""

@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
+import warnings
 
 USER_HOME = os.path.expanduser("~")
 TEST_DIR = os.path.dirname(__file__)
@@ -110,9 +111,13 @@ class AcceptanceCase:
         other_metadata = fftools.probe_clip(otherpath)
         # fftools.probe_clip currently uses a junk stub for clip objects,
         # so we do not have a formal way of testing equality
+        skip_attributes = ['mediapath']
         for attribute in other_metadata.__dict__:
+            if attribute in skip_attributes:
+                continue
             self.assertEqual(getattr(video_metadata, attribute, None),
-                             getattr(other_metadata, attribute, None))
+                             getattr(other_metadata, attribute, None),
+                             f'{attribute}')
 
     @staticmethod
     def compare_vid_entire(vid, other, pix_fmt='gray', scale=(960, 540)):
@@ -137,12 +142,18 @@ class AcceptanceCase:
         arguments."""
         duration = float(fftools.probe_clip(other).duration_seconds)
         increment = duration / samples
+        # don't take more samples than a video has frames!
+        while increment * 24 < samples:
+            samples -= 1
         for i in range(samples):
             start_seconds = i * increment
             vid_frame = fftools.extract_frame(vid, ss=start_seconds,
-                                              inteval=1, scale=scale,
+                                              scale=scale,
                                               pix_fmt=pix_fmt)
             other_frame = fftools.extract_frame(other, ss=start_seconds,
-                                                interval=1, scale=scale,
+                                                scale=scale,
                                                 pix_fmt=pix_fmt)
+            if not vid_frame and not other_frame:
+                warnings.warn(f'Skipping empty frame for {os.path.basename(vid)} ' +
+                              f'at start second {start_seconds}.')
             yield fftools.mse(vid_frame, other_frame)
