@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: skip-file
 
 """Setup for turnovertools package."""
 
@@ -19,8 +20,10 @@ setuptools.setup(
     long_description=long_description,
     long_desription_content_type="text/markdown",
     url="https://github.com/morganwl/turnovertools/",
-    scripts=['scripts/xml2ryg2.py', 'scripts/edl2csv.py',
-             'scripts/vfxpull.py', 'scripts/vfxreference.py'],
+    scripts=['scripts/ryglist.py', 'scripts/edl2csv.py',
+             'scripts/vfxpull.py', 'scripts/vfxreference.py',
+             'scripts/ale2csv.py'],
+    package_data={'turnovertools': ['adapters/translation_tables/*.csv']},
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

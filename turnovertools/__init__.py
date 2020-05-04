@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+"""Range of tools for processing Avid turnovers."""
 
-__version__ = '0.0.3'
+__version__ = '0.0.5'
 
 from .config import Config
 
@@ -14,7 +14,8 @@ from . import (
     linkfinder,
     subcap,
     vfxlist,
-    interface
+    interface,
+    sourcedb
 )
 
 from .video import output
