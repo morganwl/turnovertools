@@ -1,11 +1,11 @@
 import unittest
 
-import shared_test_setup
+import tests.shared_test_setup
 
 from turnovertools.mediaobjects import Timecode
 import turnovertools.mediaobjects as mobs
 
-from test_mediaobjects import get_sample_event_data
+from tests.test_mobs import get_sample_event_data
 
 def get_sample_vfxevent_data():
     event_data = get_sample_event_data()
@@ -26,7 +26,7 @@ def get_sample_vfxevent_data():
     sample_data['vfx_loc_tc'] = vfx_loc_tc
     event_data.update(sample_data)
     return event_data
-    
+
 class TestVFXEventInput(unittest.TestCase):
     def setUp(self):
         pass
@@ -46,4 +46,3 @@ class TestVFXEventInput(unittest.TestCase):
         vfxevent = mobs.VFXEvent.dummy(**sample_data)
         for attribute, val in sample_data.items():
             self.assertEqual(str(getattr(vfxevent, attribute)), str(val))
-
