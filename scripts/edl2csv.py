@@ -1,18 +1,22 @@
-#!/usr/bin/env python3
+"""
+Creates a csv of events and vfxevents from a group of EDLs (assuming
+that the EDLs represent separate tracks of the same sequence.) Meant
+for input into a FileMaker database.
+"""
 
 import csv
 import os
 import sys
 import tempfile
 
-# import edl
-from timecode import Timecode
+#from timecode import Timecode
 
-from turnovertools.edlobjects import EDLEvent
-from turnovertools import csvobjects, edl
+#from turnovertools.edlobjects import EDLEvent
+from turnovertools import edl
 from turnovertools.subcap import Subcap
 
-class Config(object):
+# migrate to config.Config for configuration options
+class Config:
     OUTPUT_COLUMNS = ['clip_name', 'reel', 'rec_start_tc',
                       'rec_end_tc', 'src_start_tc', 'src_end_tc',
                       'src_framerate', 'track', 'sequence_name', 'vfx_id',
@@ -20,67 +24,95 @@ class Config(object):
                       'vfx_loc_color', 'frame_count_start']
 
 def change_ext(filename, ext):
+    """Replaces the extension of filename with ext."""
     return os.path.splitext(filename)[0] + ext
 
 def sort_by_tc(events):
+    """Sorts events by their rec_start_tc."""
     events.sort(key=lambda e: (e.rec_start_tc.frames, e.track))
     return events
 
 def fn_to_track(fn):
+    """Parses an EDL filename into a track number, assuming that the
+    EDLs are named with a convention of Sequence_V[track_number].edl"""
     return change_ext(fn, '').rsplit('_', 1)[1].replace('V', '')
 
 def remove_filler(events):
-    for e in events:
-        if e.reel is None:
-            events.remove(e)
+    """Removes events with no source information from the provided list."""
+    for event in events:
+        if event.reel is None:
+            events.remove(event)
             continue
 
+# TO-DO: specify frame_count_start in configuration object
+# TO-DO: more rigorous locator parsing at object level
 def read_vfx_locators(events):
-    for e in events:
-        for l in e.locators:
-            tc = l[7:18]
-            color, comment = l[19:].split(' ', 1)
+    """
+    Parses vfx information out of locators on events and intro
+    attributes of the edl object.
+
+    Locators should be of the format:
+    vfx=[vfx_id]=[vfx_element]=[vfx_brief]
+
+    If not all 3 fields are present, populates fields in the following
+    priority: vfx_id, vfx_brief, vfx_element.
+
+    Also sets event.vfx_loc_tc based on the corresponding src_tc and sets
+    vfx_loc_color. event.frame_count_start is set to a default of 1009.
+    """
+    for event in events:
+        for loc in event.locators:
+            # we can identify locator components based on their fixed
+            # position in the string * LOC: HH:MM:SS:FF COLOR COMMENT
+            tc = loc[7:18]
+            color, comment = loc[19:].split(' ', 1)
             if comment.startswith('VFX='):
                 fields = comment.split('=')
                 # Allow for missing fields in the middle by starting
                 # with the vfx_id at the front of the string and then
                 # popping decreasingly important fields from the back
                 fields.pop(0)
-                e.vfx_id = fields.pop(0).strip()
-                e.vfx_brief = ''
-                e.vfx_element = ''
-                e.frame_count_start = 1009
+                event.vfx_id = fields.pop(0).strip()
+                event.vfx_brief = ''
+                event.vfx_element = ''
+                event.frame_count_start = 1009
                 if fields:
-                    e.vfx_brief = fields.pop().strip()
+                    event.vfx_brief = fields.pop().strip()
                 if fields:
-                    e.vfx_element = fields.pop().strip()
-                e.vfx_loc_tc = e.src_tc_at(tc)
-                e.vfx_loc_color = color.strip()
+                    event.vfx_element = fields.pop().strip()
+                event.vfx_loc_tc = event.src_tc_at(tc)
+                event.vfx_loc_color = color.strip()
 
 def make_subcaps(events):
+    """Creates a Subcap (Avid caption) object for each vfxevent with
+    the vfx_id and vfx_brief."""
     subcaps = list()
-    for e in events:
-        if hasattr(e, 'vfx_id'):
-            subcaps.append(Subcap(e.rec_start_tc, e.rec_end_tc,
-                                  f'{e.vfx_id}:    {e.vfx_brief}'))
+    for event in events:
+        if hasattr(event, 'vfx_id'):
+            subcaps.append(Subcap(event.rec_start_tc, event.rec_end_tc,
+                                  f'{event.vfx_id}:    {event.vfx_brief}'))
     return subcaps
 
+# TO-DO: use DictWriter and mobs.to_dict() method
+# TO-DO: use mobs object to specify default columns
 def output_csv(events, columns, csvfile):
+    """Outputs processed vfxevents to the filehandle csvfile."""
     writer = csv.writer(csvfile)
-
     writer.writerow(columns)
 
-    for e in events:
+    for event in events:
         row = []
         for col in columns:
-            if hasattr(e, col.lower()):
-                val = getattr(e, col.lower(), None)
+            if hasattr(event, col.lower()):
+                val = getattr(event, col.lower(), None)
             else:
-                val = e.get_custom(col)
+                val = event.get_custom(col)
             row.append(val)
         writer.writerow(row)
 
-def main(inputfile, outputfile=None, **kwargs):
+# TO-DO: migrate filename parsing to interface.py
+# TO-DO: use mobs.events instead of EDLEvents
+def main(inputfile, outputfile=None):
     output_columns = Config.OUTPUT_COLUMNS
     if os.path.isdir(inputfile):
         dirname = os.path.basename(inputfile)
@@ -92,7 +124,7 @@ def main(inputfile, outputfile=None, **kwargs):
             if file.lower().endswith('.edl'):
                 inputfile.append(os.path.join(basepath, file))
     else:
-        inputfile = [ inputfile ]
+        inputfile = [inputfile]
 
     # optionally create a temporary output file *which will not be
     # deleted on exit. This is meant for a FileMaker script that will
@@ -103,7 +135,7 @@ def main(inputfile, outputfile=None, **kwargs):
                                          delete=False) as tf:
             outputfile = tf.name
         print(os.path.realpath(outputfile))
-    
+
     events = edl.events_from_edl(inputfile)
     remove_filler(events)
     sort_by_tc(events)
@@ -118,4 +150,4 @@ def main(inputfile, outputfile=None, **kwargs):
     Subcap.write(change_ext(outputfile, '_subcap.txt'), subcaps)
 
 if __name__ == '__main__':
-    main(*sys.argv[1:])
+    main(sys.argv[1], *sys.argv[2:])

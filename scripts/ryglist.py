@@ -7,6 +7,7 @@ footage clearance process."""
 import argparse
 import collections
 import csv
+import logging
 import os
 import sys
 
@@ -45,8 +46,8 @@ def events_from_edl(edl_files):
         if new_start.frames < seq_start.frames:
             seq_start = new_start
     events = list()
-    for e in tmp_events:
-        events.append(EDLEvent(seq_start, e))
+    for event in tmp_events:
+        events.append(EDLEvent(seq_start, event))
     return events
 
 def sort_by_tc(events):
@@ -82,6 +83,8 @@ def process_events(events, ale_file=None, footage_tracker=None):
             reel = e.source_file
         else:
             reel = e.tape
+        # look for illegal characters in filenames
+        e.clip_name = e.clip_name.replace('/', '_')
         e.link = linkfinder.process(reel, matchers)
         e.number = i
         i += 1
@@ -227,7 +230,7 @@ def main(inputfile, outputfile=None, videofile=None,
                     'footagetracker' in file.lower():
                 footage_tracker = os.path.join(basepath, file)
     else:
-        inputfile = [ inputfile ]
+        inputfile = [inputfile]
 
     events = events_from_edl(inputfile)
     remove_filler(events)
@@ -251,4 +254,6 @@ def xml2ryg2():
     main(args.input, **(vars(args)))
 
 if __name__ == '__main__':
+    logging.basicConfig(filename=os.path.join(os.path.expanduser('~'),
+                                              'log', 'ryglist.log'))
     xml2ryg2()
