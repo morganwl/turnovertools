@@ -1,0 +1,22 @@
+num,
+tape,Tape
+source_file,Source File
+reel,
+tr_code,
+aux,
+src_framerate,FPS
+src_start_tc,Start
+src_end_tc,End
+mark_start_tc,Mark IN
+mark_end_tc,Mark OUT
+rec_framerate,
+rec_start_tc,
+rec_end_tc,
+clip_name,Name
+tracks,Tracks
+umid,
+source_file_path,Source file path
+media_file_path,
+link,Link
+duration,Duration
+clip_comments,Comments
