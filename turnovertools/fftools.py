@@ -62,10 +62,13 @@ def build_ffmpeg(vid, frameno=0, format='image2', dur=None,
     return command
 
 def extract_frame(vid, frameno=0, format='image2',
-                       dur=None, scale=None, interval=1, **kwargs):
+                  dur=None, scale=None, interval=1, **kwargs):
     command = build_ffmpeg(vid, frameno=frameno, format=format, dur=1,
                            scale=scale, **kwargs)
-    frame, _ = ffmpeg.run(command, capture_stdout=True, capture_stderr=True)
+    try:
+        frame, error = ffmpeg.run(command, capture_stdout=True, capture_stderr=True)
+    except ffmpeg._run.Error as e:
+        print(e.stderr)
     return frame
 
 def frame_iterator(process, size):
