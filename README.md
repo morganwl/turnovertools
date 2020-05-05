@@ -5,15 +5,18 @@ Development is erratic, chasing around to follow actual tasks on the job.
 
 ## Changelog
 
-### 0.0.5 04.15-2020
+### 0.0.5 04.15.2020
 
 - To-Do:
   - Write full testsuite for xml2ryg
-  - Rename xml2ryg to ryglist
+  + Rename xml2ryg to ryglist
   - Work on refactoring and improving codebase of ryglist
   - Focus on tests across the board
+  + Fix broken tests in test_sourcedb
+  - Fix broken tests in test_ryglist
+  -
 
-### 0.0.4 04.15-2020
+### 0.0.4 04.15.2020
 
 - added VFX list support
   - read EDLs and extract vfx list based on markers
