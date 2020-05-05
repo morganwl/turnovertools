@@ -42,7 +42,7 @@ class Mob:
     def standard_attrs(cls):
         """Returns a list of all the attributes this media object is
         expected to provide, and will set from kwargs on input."""
-        return cls._provides_attrs
+        return []
 
     @staticmethod
     def _parse_framerate(framerate, start_tc, end_tc):
@@ -66,8 +66,7 @@ class Clip(Mob):
     """Parent object for any media object made from a single piece of
     media."""
     _provides_attrs = ['tape', 'source_file', 'reel', 'src_framerate',
-                       'src_start_tc', 'src_end_tc', 'clip_name',
-                       'default_source_file']
+                       'src_start_tc', 'src_end_tc', 'clip_name']
 
     def __init__(self, tape=None, source_file=None,
                  reel=None, src_framerate=None, src_start_tc=None,
