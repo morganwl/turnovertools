@@ -433,6 +433,29 @@ class MediaDatabase:
             return result
         return None
 
+    def _query_mxf_tables_by_name(self, name):
+        union_buffer = list()
+        params = list()
+        for table in (mxftable.table for mxftable in self.mxf_tables):
+            union_buffer.append(f'SELECT * FROM {table} WHERE name=?')
+            params.append(name)
+        query = ' UNION '.join(union_buffer)
+        with self.conn as c:
+            return c.execute(query, params).fetchall()
+
+    def get_umids(self, reel, mediatype=None):
+        """Returns all umids with the given reelname, optionally filtering
+        by mediatype."""
+        seen = dict()
+        rows = self._query_mxf_tables_by_name(reel)
+        for media in (MediaFile(**self._columns_to_dict(row)) for row in rows):
+            if media.umid in seen:
+                continue
+            if mediatype is not None and media.mediatype != mediatype:
+                continue
+            seen[media.umid] = True
+            yield media
+
     def __getitem__(self, key):
         result = self._query_mxf_tables(key)
         if result is None:
