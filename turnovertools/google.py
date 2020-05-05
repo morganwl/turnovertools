@@ -1,5 +1,7 @@
 """Mixin classes for Google Creative Lab workflows."""
 
+from turnovertools import mediaobjects as mobs
+
 # pylint: disable=too-few-public-methods
 # this is a mixin class meant for its attributes
 class Google:
@@ -37,3 +39,6 @@ class Google:
         """Returns a list of all the attributes this media object is
         expected to provide, and will set from kwargs on input."""
         return Google._provides_attrs + super().standard_attrs()
+
+class GoogleSourceClip(Google, mobs.SourceClip):
+    pass
