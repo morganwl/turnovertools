@@ -9,13 +9,18 @@ FRAMERATE_TABLE = {'23.976': '23.98',
                    'ntsc-film': '23.98',
                    '24000/1001': '23.98',
                    '24': '24',
+                   '24/1': '24',
                    'film': '24',
                    'pal': '25',
+                   '25/1': '25',
+                   '25': '25',
                    'ntsc': '29.97',
                    '29.97': '29.97',
                    '30000/1001': '29.97',
                    '30i': '29.97',
+                   '30/1': '30',
                    '30': '30',
+                   '60000/1001': '59.94',
                    '59.94': '59.94',
                    '60i': '59.94'}
 
@@ -59,8 +64,14 @@ class Timecode(TimecodeParent):
                                      'with framerate {framerate}.')
             start_timecode = str(start_timecode)
         framerate = self.normalize_framerate(framerate)
-        if start_timecode and len(start_timecode.split(':')) != 4:
+        # TO-DO: Check for drop-frame in a smarter way
+        # TO-DO: Test for well-formed and poorly formed timecodes
+        if start_timecode and len(start_timecode.replace(';', ':').split(':')) != 4:
             raise ValueError(f'Poorly formed timecode {start_timecode}.')
+        f_framerate = float(framerate)
+        if f_framerate == 23.98:
+            f_framerate = 23.976
+        self.f_framerate = f_framerate
         super(Timecode, self).__init__(framerate, start_timecode,
                                        **kwargs)
 
@@ -77,6 +88,24 @@ class Timecode(TimecodeParent):
     def __mul__(self, other):
         result = super(Timecode, self).__mul__(other)
         return self.cast_to_current_type(result)
+
+    def offset(self, base):
+        """Returns the timecode offset between self and base. Unlike
+        substraction, this treats the offset timecode as inclusive,
+        meaning that 00:00:00:01 - 00:00:00:00 is 00:00:00:01."""
+        return self - base + 1
+
+    def real_seconds(self, offset=None):
+        """Returns the actual seconds, taking into account pulldown
+        timecode, defaulting to an offset from 00:00:00:00."""
+        if offset is not None:
+            if hasattr(offset, 'framerate'):
+                frames = self.offset(offset).frames
+            else:
+                frames = self.offset(Timecode(self.framerate, offset)).frames
+        else:
+            frames = self.frames
+        return (frames - 1) / self.f_framerate
 
     # parent class implements __floordiv__ as __div__, because it is
     # from python2!
