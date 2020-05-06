@@ -1,6 +1,7 @@
 """Interface for interfacing with a FileMaker Pro database in order to
 lookup Source information."""
 
+import logging
 import os
 import subprocess
 import string
@@ -14,6 +15,7 @@ from turnovertools.config import Config
 FILEMAKER_DRIVER = '/Library/ODBC/FileMaker ODBC.bundle/Contents/MacOS/fmodbc.so'
 
 def sanitize_name(name):
+    """Remove questionable characters from a name string."""
     newchars = list()
     name, ext = os.path.splitext(name)
     for c in name:
@@ -138,9 +140,10 @@ class SourceTable:
         reel."""
         keyfield = 'PrimaryKey' if pk else 'reel'
         with self.connection as c:
-            print(f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' WHERE {keyfield}=?", key)
-            c.execute(f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' WHERE {keyfield}=?",
-                      (val, key))
+            sql = f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' " +\
+                  f"WHERE {keyfield}=?"
+            logging.info("EXECUTED QUERY: %s with key %s", sql, key)
+            c.execute(sql, (val, key))
 
     def insert_image(self, reel, filepath):
         """Reads a binary file from filename and puts it in the image
