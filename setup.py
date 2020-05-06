@@ -22,7 +22,7 @@ setuptools.setup(
     url="https://github.com/morganwl/turnovertools/",
     scripts=['scripts/ryglist.py', 'scripts/edl2csv.py',
              'scripts/vfxpull.py', 'scripts/vfxreference.py',
-             'scripts/ale2csv.py'],
+             'scripts/ale2csv.py', 'scripts/insert_umid.py'],
     package_data={'turnovertools': ['adapters/translation_tables/*.csv']},
     packages=setuptools.find_packages(),
     classifiers=[
