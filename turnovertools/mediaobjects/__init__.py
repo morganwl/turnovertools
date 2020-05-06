@@ -11,3 +11,4 @@ from .mob import Mob, Clip
 from .event import *
 from .vfxevent import VFXEvent
 from .source_clip import SourceClip
+from .mediafile import MediaFile
