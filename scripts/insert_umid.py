@@ -48,7 +48,7 @@ def main(reel, primary_key, table, sourcetable, mediadb=None):
             reader = csv.reader(filehandle)
             sources = list(reader)
     else:
-        sources = (reel, primary_key)
+        sources = [(reel, primary_key)]
 
     for source in sources:
         insert_umid(source[0], source[1], table, sourcetable, mediadb)
