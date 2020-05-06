@@ -81,11 +81,28 @@ class AcceptanceCase:
                 shutil.copy(os.path.join(dirpath, file),
                             destpath)
 
-    def populate_temp_dir(self, *files):
+    def populate_temp_dir(self, *files, relpath=None, base=None):
         """Copies the given files into the TestCase's temporary
         directory."""
+        target = self.tempdir
+        if relpath:
+            target = os.path.join(target, *relpath)
+            os.makedirs(target, exist_ok=True)
         for file in files:
-            shutil.copy(file, self.tempdir)
+            if base:
+                file = os.path.join(base, file)
+            shutil.copy(file, target)
+
+    def get_temp_file(self, *args):
+        """Returns files output into the temp directory."""
+        return os.path.join(self.tempdir, *args)
+
+    def get_temp_files(self, *args, suffix=None):
+        files = os.listdir(self.get_temp_file(*args))
+        if suffix:
+            files = filter(lambda f: f.endswith(suffix), files)
+        for file in files:
+            yield file
 
     def get_output(self, *args):
         """Returns files output into the temp directory."""
