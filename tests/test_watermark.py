@@ -58,7 +58,7 @@ class TestWatermark(unittest.TestCase):
         for i in range(100):
             dur = watermark.range_to_real_dur(start + i*12, end + i*12, 23.976)
             self.assertEqual(int(dur*100), 200)
-    
+
     @unittest.skip
     def test_write_video_with_watermark(self):
         wm = watermark.RecBurn(**self.metadata)
@@ -66,14 +66,14 @@ class TestWatermark(unittest.TestCase):
                                              wm,
                                              start=self.metadata['rec_start_tc'],
                                              end=self.metadata['rec_end_tc'])
-        
+
 
 class TestVFXReference(unittest.TestCase):
     def setUp(self):
         self.vfxlist = TEST_VFX_LIST
         self.mediadir = PRIVATE_TEST_FILES
         self.control_path = REFERENCE_QT_CONTROL_DIR
-        self.control_videos = sorted(file for file in 
+        self.control_videos = sorted(file for file in
                                      (os.listdir(
                     REFERENCE_QT_CONTROL_DIR)) if not file.startswith('.'))
 
@@ -86,6 +86,7 @@ class TestVFXReference(unittest.TestCase):
                 self.assertEqual(result, control)
 
     def test_vfx_reference_image_comparison(self):
+        self.fail('Watermark needs a rewrite. Revisit this test.')
         with tempfile.TemporaryDirectory() as outputdir:
             vfxreference.main(self.vfxlist, self.mediadir, outputdir)
             results = sorted(os.listdir(outputdir))

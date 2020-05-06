@@ -43,6 +43,7 @@ class TestMixedRateEdl(unittest.TestCase):
     def test_read_vfx_locators(self):
         """Inputs an event and, if that event has a properly formatted
         locator, expects a vfxevent back."""
+        self.fail('This is an unfinished test for a planned change')
         event = Event.dummy(rec_start_tc='01:00:00:00')
         event = edl2csv.read_vfx_locators(event)
         #Event.dummy(rec_start_tc='01:01:00:00',

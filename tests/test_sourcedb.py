@@ -146,8 +146,8 @@ class TestReadDatabase(unittest.TestCase):
 
     def test_image(self):
         """Should be able to read images contained in the database."""
-        clip = self.source_table[self.test_file.inputs[0]]
-        self.assertIsNotNone(clip['image'])
+        image = self.source_table.get_blob(self.test_file.inputs[1], 'image', 'JPEG')
+        self.assertIsNotNone(image)
 
     def test_update_container(self):
         """Updates an image into the image field of a source."""

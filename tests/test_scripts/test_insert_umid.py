@@ -112,7 +112,7 @@ class TestAcceptance(unittest.TestCase, AcceptanceCase):
         db.index_all()
         # run insert_umid with second record
         clip = self.source_table[self.test_file.inputs[1]]
-        insert_umid.main(clip['source_file'], clip['PrimaryKey'], 'Source',
+        insert_umid.main(clip['reel'], clip['PrimaryKey'], 'Source',
                          sourcetable=self.source_table, mediadb=db)
         # check contents of image field
         image = self.source_table.get_blob(clip['reel'], 'image', 'JPEG')
