@@ -11,3 +11,4 @@ from . import test_vfxpull
 from . import test_watermark
 from . import test_xml
 from .test_mobs import test_vfxevent, test_event, test_mob, test_timecode
+from . import test_scripts

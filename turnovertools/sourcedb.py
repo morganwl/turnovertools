@@ -131,6 +131,13 @@ class SourceTable:
         with open(filepath, 'rb') as image:
             self.update_container(reel, 'image', image.read(), name)
 
+    def get_blob(self, reel, field, blobtype):
+        """Reads a binary string from a Container field."""
+        with self.connection as c:
+            result = c.execute(f"SELECT GetAs({field}, '{blobtype}') " +
+                               "FROM Source WHERE reel=?", (reel,)).fetchone()
+        return result[0]
+
     def _get_fields(self):
         with self.connection as c:
             query = c.execute('SELECT FieldName FROM FileMaker_Fields ' +

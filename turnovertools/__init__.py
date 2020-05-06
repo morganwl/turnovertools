@@ -15,7 +15,7 @@ from . import (
     subcap,
     vfxlist,
     interface,
-    sourcedb
+    sourcedb,
 )
 
 from .video import output
