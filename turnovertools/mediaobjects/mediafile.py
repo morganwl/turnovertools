@@ -27,6 +27,9 @@ def stream_jpeg(stream):
         if chunk == 0xd9 and buffer[-2] == 0xff:
             yield bytes(buffer)
             buffer = []
+    if buffer:
+        msg = f'Unexpected data %{len(buffer)} bytes, ending with {buffer[:-2]}.'
+        raise ValueError(msg)
 
 
 class MediaFile(SourceClip):
@@ -52,7 +55,9 @@ class MediaFile(SourceClip):
         self.size = int(size)
         self.filepath = filepath
         self.filename = os.path.basename(filepath)
-        self._poster_frame = Timecode(self.src_framerate, poster_frame)
+        if poster_frame:
+            poster_frame = Timecode(self.src_framerate, poster_frame)
+        self._poster_frame = poster_frame
 
     def _choose_umid(self):
         if self.file_package_umid:
@@ -71,23 +76,28 @@ class MediaFile(SourceClip):
             val = Timecode(self.src_framerate, val)
         self._poster_frame = val
 
-    def thumbnail(self, ss=None, interval=50, scale=(320, 180)):
+    def thumbnail(self, start_second=None, interval=50, scale=(320, 180)):
         """Return a single thumbnail for the video, chosen from roughly
         the middle of the clip."""
         if self.poster_frame is not None:
             interval = 1
             if hasattr(self.poster_frame, 'framerate'):
-                ss = self.poster_frame.real_seconds(self.src_start_tc)
+                start_second = self.poster_frame.real_seconds(self.src_start_tc)
             else:
-                ss = self.poster_frame / self.src_start_tc.f_framerate
-        if ss is None:
+                start_second = self.poster_frame / self.src_start_tc.f_framerate
+        if start_second is None:
             interval_seconds = interval / float(self.src_framerate)
             if self.seconds > interval_seconds:
-                ss = self.seconds / 2 - interval_seconds / 2
+                start_second = self.seconds / 2 - interval_seconds / 2
             else:
-                ss = self.seconds / 2
+                start_second = self.seconds / 2
                 interval = round(self.seconds * float(self.src_framerate))
-        return next(self.thumbnails(frames=1, ss=ss, interval=interval, scale=scale))
+        try:
+            return next(self.thumbnails(frames=1, ss=start_second,
+                                        interval=interval, scale=scale))
+        except StopIteration as e:
+            msg = f'No image yielded at {start_second} with interval {interval}.'
+            raise Exception(msg) from e
 
     def thumbnails(self, frames=None, ss=None, interval=100, scale=(320, 180)):
         """Yield thumbnails for the video, chosen at a given interval."""
