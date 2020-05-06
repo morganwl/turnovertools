@@ -10,6 +10,9 @@ import warnings
 from zipfile import ZipFile, BadZipFile
 import zlib
 
+# TO-DO: Why do we keep trying to re-index AS12/MXF/1?
+# TO-DO: Fix mxf files that don't index
+
 def get_media_stream(streams):
     """Returns the metadata for the media stream in an MXF file,
     discarding data streams."""

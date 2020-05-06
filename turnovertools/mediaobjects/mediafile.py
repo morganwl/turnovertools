@@ -36,7 +36,8 @@ class MediaFile(SourceClip):
     def __init__(self, mediatype=None, pix_fmt=None, seconds=None,
                  track_name=None, file_package_umid=None, reel_umid=None,
                  material_package_umid=None, format_name=None,
-                 bitrate=None, size=None, filepath=None, **kwargs):
+                 bitrate=None, size=None, filepath=None, poster_frame=None,
+                 **kwargs):
         super(MediaFile, self).__init__(**kwargs)
         self.mediatype = mediatype
         self.pix_fmt = pix_fmt
@@ -51,6 +52,7 @@ class MediaFile(SourceClip):
         self.size = int(size)
         self.filepath = filepath
         self.filename = os.path.basename(filepath)
+        self._poster_frame = Timecode(self.src_framerate, poster_frame)
 
     def _choose_umid(self):
         if self.file_package_umid:
@@ -59,9 +61,25 @@ class MediaFile(SourceClip):
             return self.reel_umid
         return self.material_package_umid
 
-    def thumbnail(self, ss=None, interval=50, scale=(360, 180)):
+    @property
+    def poster_frame(self):
+        return self._poster_frame
+
+    @poster_frame.setter
+    def poster_frame(self, val):
+        if val is not None:
+            val = Timecode(self.src_framerate, val)
+        self._poster_frame = val
+
+    def thumbnail(self, ss=None, interval=50, scale=(320, 180)):
         """Return a single thumbnail for the video, chosen from roughly
         the middle of the clip."""
+        if self.poster_frame is not None:
+            interval = 1
+            if hasattr(self.poster_frame, 'framerate'):
+                ss = self.poster_frame.real_seconds(self.src_start_tc)
+            else:
+                ss = self.poster_frame / self.src_start_tc.f_framerate
         if ss is None:
             interval_seconds = interval / float(self.src_framerate)
             if self.seconds > interval_seconds:
@@ -71,13 +89,16 @@ class MediaFile(SourceClip):
                 interval = round(self.seconds * float(self.src_framerate))
         return next(self.thumbnails(frames=1, ss=ss, interval=interval, scale=scale))
 
-    def thumbnails(self, frames=None, ss=None, interval=100, scale=(360, 180)):
+    def thumbnails(self, frames=None, ss=None, interval=100, scale=(320, 180)):
         """Yield thumbnails for the video, chosen at a given interval."""
+        filters = f'scale={scale[0]}:{scale[1]}'
+        if interval > 1:
+            filters += f',thumbnail={interval}'
         args = ['ffmpeg']
         if ss:
             args.extend(('-ss', str(ss)))
         args.extend(('-i', self.filepath, '-vcodec', 'mjpeg', '-vf',
-                     f'thumbnail={interval},scale={scale[0]}:{scale[1]}'))
+                     filters))
         if frames is not None:
             args.extend(('-vframes', str(frames)))
         args.extend(('-f', 'image2pipe', '-'))
@@ -97,9 +118,10 @@ class MediaFile(SourceClip):
 
 
         # calculate src_end_timecode based on framerate and seconds
-        framerate = stream['r_frame_rate']
-        seconds = float(stream['duration'])
-        src_start_tc = Timecode(framerate, stream_tags['timecode'])
+        framerate = stream.get('r_frame_rate')
+        seconds = float(stream.get('duration'))
+        src_start_tc = Timecode(framerate,
+                                stream_tags.get('timecode', '00:00:00:00'))
         try:
             framerate = float(framerate)
         except ValueError:
@@ -111,7 +133,7 @@ class MediaFile(SourceClip):
         reel = stream_tags.get('reel_name')
         tape = None
         source_file = None
-        if '.' in reel:
+        if reel and '.' in reel:
             source_file = reel
         else:
             tape = reel
@@ -123,9 +145,9 @@ class MediaFile(SourceClip):
                          seconds=seconds,
                          src_start_tc=src_start_tc,
                          src_end_tc=src_end_tc,
-                         file_package_umid=stream_tags.get('file_package_umid'),
-                         reel_umid=stream_tags.get('reel_umid'),
-                         material_package_umid=tags.get('material_package_umid'),
+                         file_package_umid=stream_tags.get('file_package_umid').lower(),
+                         reel_umid=stream_tags.get('reel_umid').lower(),
+                         material_package_umid=tags.get('material_package_umid').lower(),
                          track_name=stream_tags.get('track_name'),
                          format_name=mformat.get('format_name'),
                          bitrate=mformat.get('bit_rate'),

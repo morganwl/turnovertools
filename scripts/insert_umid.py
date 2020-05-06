@@ -5,12 +5,27 @@ thumbnail into the FileMaker at the matching id.
 """
 # TO-DO: Write tests to actually outline implementation of this program
 
+import csv
+import os
 import sys
 
 import turnovertools.mediaobjects as mobs
 from turnovertools import sourcedb
 from turnovertools import mxfdb
 from turnovertools.config import Config
+
+def insert_umid(reel, primary_key, table, sourcetable, mediadb):
+    umids = list(mediadb.get_umids(reel, 'video'))
+    if not umids:
+        return
+
+    # get mxf file path
+    mediafile = mobs.MediaFile.probe(umids[0].path)
+    mediafile.poster_frame = sourcetable.get_pk(primary_key)['poster_frame']
+    thumbnail = mediafile.thumbnail()
+    sourcetable.update_container(primary_key, 'image', thumbnail,
+                                 f'{mediafile.clip_name}.jpg', pk=True)
+    sourcetable.update(primary_key, 'umid', mediafile.umid, pk=True)
 
 def main(reel, primary_key, table, sourcetable, mediadb=None):
     """Queries the mxf database for mediafiles matching reel. If found,
@@ -26,12 +41,17 @@ def main(reel, primary_key, table, sourcetable, mediadb=None):
         mediadb = mxfdb.open(mxfdb)
     if isinstance(sourcetable, str):
         sourcetable = sourcedb.SourceTable(sourcedb.connect(database=sourcetable))
-    umids = list(mediadb.get_umids(reel, 'video'))
-    # get mxf file path
-    mediafile = mobs.MediaFile.probe(umids[0].path)
-    thumbnail = mediafile.thumbnail()
-    sourcetable.update_container(reel, 'image', thumbnail,
-                                 f'{mediafile.clip_name}.jpg')
+
+    # first argument can either be a reel or a file containing a list of reels
+    if os.path.isfile(reel):
+        with open(reel, newline='') as filehandle:
+            reader = csv.reader(filehandle)
+            sources = list(reader)
+    else:
+        sources = (reel, primary_key)
+
+    for source in sources:
+        insert_umid(source[0], source[1], table, sourcetable, mediadb)
 
 if __name__ == '__main__':
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:])

@@ -117,3 +117,6 @@ class TestAcceptance(unittest.TestCase, AcceptanceCase):
         # check contents of image field
         image = self.source_table.get_blob(clip['reel'], 'image', 'JPEG')
         self.assertEqual(image[:2], b'\xff\xd8')
+        # check contents of umid field
+        clip = self.source_table[self.test_file.inputs[1]]
+        self.assertIsNotNone(clip['umid'])

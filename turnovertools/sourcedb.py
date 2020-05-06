@@ -3,6 +3,7 @@ lookup Source information."""
 
 import os
 import subprocess
+import string
 import time
 
 import pyodbc
@@ -11,6 +12,18 @@ from turnovertools import mediaobjects as mobs
 from turnovertools.config import Config
 
 FILEMAKER_DRIVER = '/Library/ODBC/FileMaker ODBC.bundle/Contents/MacOS/fmodbc.so'
+
+def sanitize_name(name):
+    newchars = list()
+    name, ext = os.path.splitext(name)
+    for c in name:
+        if c in string.whitespace and newchars and newchars[-1] != ' ':
+            newchars.append(' ')
+        elif c in string.ascii_letters:
+            newchars.append(c)
+        elif c in string.digits:
+            newchars.append(c)
+    return ''.join(newchars) + ext
 
 def connect(database=None, path=None, **kwargs):
     """Creates a connection to a Database and properly configures the
@@ -111,18 +124,23 @@ class SourceTable:
             record = self._row_to_dict(record)
         return mobs.SourceClip(**record)
 
-    def update(self, reel, field, val):
+    def update(self, reel, field, val, pk=False):
         """Changes the value of field in an an existing element
         in the table."""
+        keyfield = 'PrimaryKey' if pk else 'reel'
         with self.connection as c:
-            c.execute(f'UPDATE Source SET {field}=? WHERE reel = ?',
+            c.execute(f'UPDATE Source SET {field}=? WHERE {keyfield} = ?',
                       (val, reel))
 
-    def update_container(self, reel, field, val, put_as):
-        """Updates a container object with an AS {filename} keyword."""
+    def update_container(self, key, field, val, put_as, pk=False):
+        """Updates a container object with an AS {filename} keyword. If
+        pk is set, uses PrimaryKey to index records instead of the default
+        reel."""
+        keyfield = 'PrimaryKey' if pk else 'reel'
         with self.connection as c:
-            c.execute(f"UPDATE Source SET {field}=? AS '{put_as}' WHERE reel=?",
-                      (val, reel))
+            print(f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' WHERE {keyfield}=?", key)
+            c.execute(f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' WHERE {keyfield}=?",
+                      (val, key))
 
     def insert_image(self, reel, filepath):
         """Reads a binary file from filename and puts it in the image
@@ -138,6 +156,14 @@ class SourceTable:
                                "FROM Source WHERE reel=?", (reel,)).fetchone()
         return result[0]
 
+    def get_pk(self, key):
+        """Get record by specific PrimaryKey instead of reel. Reels should
+        be unique, but this might be necessary in some circumstances."""
+        with self.connection as c:
+            query = c.execute(f'SELECT * FROM Source WHERE PrimaryKey=?', (key,))
+            result = query.fetchone()
+        return self._row_to_dict(result)
+
     def _get_fields(self):
         with self.connection as c:
             query = c.execute('SELECT FieldName FROM FileMaker_Fields ' +
@@ -146,12 +172,12 @@ class SourceTable:
         for row in fields:
             yield row[0]
 
-    def __getitem__(self, key):
+    def __getitem__(self, reel):
         with self.connection as c:
-            query = c.execute(f'SELECT * FROM Source WHERE reel=?', (key,))
+            query = c.execute(f'SELECT * FROM Source WHERE reel=?', (reel,))
             rows = query.fetchmany(2)
         if len(rows) > 1:
-            raise KeyError('Multiple sources returned for {key}')
+            raise KeyError(f'Multiple sources returned for {reel}')
         return self._row_to_dict(rows[0])
 
     def _row_to_dict(self, row):
