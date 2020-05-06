@@ -7,13 +7,13 @@ from timecode import Timecode as TimecodeParent
 FRAMERATE_TABLE = {'23.976': '23.98',
                    '23.98': '23.98',
                    'ntsc-film': '23.98',
-                   '2400/1001': '23.98',
+                   '24000/1001': '23.98',
                    '24': '24',
                    'film': '24',
                    'pal': '25',
                    'ntsc': '29.97',
                    '29.97': '29.97',
-                   '3000/1001': '29.97',
+                   '30000/1001': '29.97',
                    '30i': '29.97',
                    '30': '30',
                    '59.94': '59.94',
@@ -106,7 +106,7 @@ class Timecode(TimecodeParent):
     def normalize_framerate(framerate):
         """Converts a variety of known framerate names to their
         corresponding Timecode framerate. Known framerates:
-        '23.976', '23.98', '23.98', 'ntsc-film', '24', 'film', '2400/1001',
+        '23.976', '23.98', '23.98', 'ntsc-film', '24', 'film', '24000/1001',
         'pal', '25', 'ntsc', '29.97', '30i', '3000/1001', '30', '59.94',
         '60i', '59.94'"""
         try:
