@@ -7,14 +7,25 @@ Development is erratic, chasing around to follow actual tasks on the job.
 
 ### 0.0.5 04.15.2020
 
+- Changes:
+  - insert_umid script allows finding and inserting thumbnails in source table
+  - FileMaker source table support
+  - created MediaFile and SourceClip mobs
+  - fixed bugs in Timecode mob
+  - renamed xml2ryg to ryglist
+
 - To-Do:
-  - Write full testsuite for xml2ryg
-  + Rename xml2ryg to ryglist
-  - Work on refactoring and improving codebase of ryglist
-  - Focus on tests across the board
-  + Fix broken tests in test_sourcedb
-  - Fix broken tests in test_ryglist
-  -
+  - Fix or flag failing tests
+  - Clean up command line interface for ale2csv and insert_umid
+
+- To-Do in Next Version:
+  - Write full testsuite for ryglist
+  - Refactor more generalized ryglist
+  - Connect ryglist to FileMaker database
+  - Tie FileMaker tables together
+  - Fix missing umids in mxfdb
+  - Fix MXF/1 refresh bug in mxfdb
+  - Migrate mxfdb to using MediaFile mob
 
 ### 0.0.4 04.15.2020
 
