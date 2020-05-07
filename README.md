@@ -5,6 +5,17 @@ Development is erratic, chasing around to follow actual tasks on the job.
 
 ## Changelog
 
+### 0.0.6 05.06.2020
+
+- To-Do:
+  - Write full testsuite for ryglist
+  - Refactor more generalized ryglist
+  - Connect ryglist to FileMaker database
+  - Tie FileMaker tables together
+  - Fix missing umids in mxfdb
+  - Fix MXF/1 refresh bug in mxfdb
+  - Migrate mxfdb to using MediaFile mob
+
 ### 0.0.5 04.15.2020
 
 - Changes:
@@ -15,7 +26,7 @@ Development is erratic, chasing around to follow actual tasks on the job.
   - renamed xml2ryg to ryglist
 
 - To-Do:
-  - Fix or flag failing tests
+  + Fix or flag failing tests
   - Clean up command line interface for ale2csv and insert_umid
 
 - To-Do in Next Version:
