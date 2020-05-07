@@ -68,11 +68,16 @@ class MediaFile(SourceClip):
 
     @property
     def poster_frame(self):
+        """If set, poster_frame will be used for thumbnail method."""
         return self._poster_frame
 
     @poster_frame.setter
     def poster_frame(self, val):
-        if val is not None:
+        """Sets poster_frame as a Timecode object matching the src_framerate.
+        Also accepts a Timecode object."""
+        if isinstance(val, int):
+            val = self.src_start_tc + val
+        elif val is not None:
             val = Timecode(self.src_framerate, val)
         self._poster_frame = val
 
@@ -81,10 +86,8 @@ class MediaFile(SourceClip):
         the middle of the clip."""
         if self.poster_frame is not None:
             interval = 1
-            if hasattr(self.poster_frame, 'framerate'):
-                start_second = self.poster_frame.real_seconds(self.src_start_tc)
-            else:
-                start_second = self.poster_frame / self.src_start_tc.f_framerate
+            start_second = self.poster_frame.real_seconds(self.src_start_tc)
+        # if no start_second is specified, choose from the middle of the clip
         if start_second is None:
             interval_seconds = interval / float(self.src_framerate)
             if self.seconds > interval_seconds:
@@ -92,21 +95,23 @@ class MediaFile(SourceClip):
             else:
                 start_second = self.seconds / 2
                 interval = round(self.seconds * float(self.src_framerate))
+        # return the thumbnail, raising an exception if necessary
         try:
-            return next(self.thumbnails(frames=1, ss=start_second,
+            return next(self.thumbnails(frames=1, start_second=start_second,
                                         interval=interval, scale=scale))
-        except StopIteration as e:
+        except StopIteration as err:
             msg = f'No image yielded at {start_second} with interval {interval}.'
-            raise Exception(msg) from e
+            raise Exception(msg) from err
 
-    def thumbnails(self, frames=None, ss=None, interval=100, scale=(320, 180)):
+    def thumbnails(self, frames=None, start_second=None,
+                   interval=100, scale=(320, 180)):
         """Yield thumbnails for the video, chosen at a given interval."""
         filters = f'scale={scale[0]}:{scale[1]}'
         if interval > 1:
             filters += f',thumbnail={interval}'
         args = ['ffmpeg']
-        if ss:
-            args.extend(('-ss', str(ss)))
+        if start_second:
+            args.extend(('-ss', str(start_second)))
         args.extend(('-i', self.filepath, '-vcodec', 'mjpeg', '-vf',
                      filters))
         if frames is not None:
@@ -115,6 +120,7 @@ class MediaFile(SourceClip):
         ffmpeg = subprocess.run(args, capture_output=True, check=True)
         yield from stream_jpeg(ffmpeg.stdout)
 
+    # pylint: disable=R0914
     @classmethod
     def probe(cls, filepath):
         """Creates a MediaFile object by probing a videofile."""
@@ -125,7 +131,6 @@ class MediaFile(SourceClip):
         tags = mformat['tags']
         stream = get_media_stream(data['streams'])
         stream_tags = stream['tags']
-
 
         # calculate src_end_timecode based on framerate and seconds
         framerate = stream.get('r_frame_rate')
