@@ -23,10 +23,7 @@ import tempfile
 
 from turnovertools import adapters
 import turnovertools.mediaobjects as mobs
-from turnovertools.google import Google
-
-class GoogleSourceClip(Google, mobs.SourceClip):
-    """Source clip for Creative Labs projects and FMP integration."""
+from turnovertools.google import GoogleSourceClip
 
 # TO-DO: Break out into a couple sub-methods?
 def main(inputfile, outputfile=None):
