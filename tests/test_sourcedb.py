@@ -152,16 +152,16 @@ class TestReadDatabase(unittest.TestCase):
     def test_update_container(self):
         """Updates an image into the image field of a source."""
         clip = self.source_table[self.test_file.inputs[0]]
-        with open('/Users/morgan/Desktop/source_with_tape_name.png', 'rb') as png:
+        with open('/Users/morgan/Desktop/source_with_tape_name.jpg', 'rb') as png:
             self.source_table.update_container(clip['reel'], 'image',
-                                               png.read(), 'source_with_tape_name.png')
+                                               png.read(), 'source_with_tape_name.jpg')
 
     def test_insert_image(self):
         """Uses the insert_image method to read and insert an image from a
         filename."""
         clip = self.source_table[self.test_file.inputs[1]]
         self.source_table.insert_image(clip['reel'],
-                                       '/Users/morgan/Desktop/source_with_tape_name.png')
+                                       '/Users/morgan/Desktop/source_with_tape_name.jpg')
 
     def test_to_clip(self):
         """Should be able to return information as a Mobs.SourceClip object,
