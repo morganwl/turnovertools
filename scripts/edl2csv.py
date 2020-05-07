@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Creates a csv of events and vfxevents from a group of EDLs (assuming
 that the EDLs represent separate tracks of the same sequence.) Meant
@@ -132,8 +134,8 @@ def main(inputfile, outputfile=None):
     if outputfile == ':temp':
         # tmpdir = os.path.expanduser('~')
         with tempfile.NamedTemporaryFile(mode='wt', suffix='.csv',
-                                         delete=False) as tf:
-            outputfile = tf.name
+                                         delete=False) as temp:
+            outputfile = temp.name
         print(os.path.realpath(outputfile))
 
     events = edl.events_from_edl(inputfile)

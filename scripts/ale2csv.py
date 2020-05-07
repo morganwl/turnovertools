@@ -22,7 +22,6 @@ import sys
 import tempfile
 
 from turnovertools import adapters
-import turnovertools.mediaobjects as mobs
 from turnovertools.google import GoogleSourceClip
 
 # TO-DO: Break out into a couple sub-methods?

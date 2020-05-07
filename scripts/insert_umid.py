@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Receive a command line argument of a reel and a FileMaker record id.
 Query mxf database for a matching mediafile and, if found, insert a
