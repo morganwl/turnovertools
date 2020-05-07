@@ -30,22 +30,37 @@ def sanitize_name(name):
 def connect(database=None, path=None, **kwargs):
     """Creates a connection to a Database and properly configures the
     utf-8 encoding."""
-    status = filemaker_status()
-    if status is None:
-        open_filemaker()
-    if database not in filemaker_status() and path is not None:
-        open_database(path)
+    #status = filemaker_status()
+    #if status is None:
+    #    open_filemaker()
+    #if database not in filemaker_status() and path is not None:
+    #    open_database(path)
     odbc_args = dict(DRIVER=FILEMAKER_DRIVER,
                      DATABASE=database,
                      CHARSET='utf-8',
                      SERVER='localhost',
                      UID='Python')
     odbc_args.update(kwargs)
-    connection = pyodbc.connect(**odbc_args)
+    connection = try_connection(path, **odbc_args)
     connection.setencoding('utf-8')
     connection.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')
-    SourceTable.prior_status = status
+    # SourceTable.prior_status = status
     return connection
+
+def try_connection(path, **odbc_args):
+    """Tries to open a FileMaker connection, sending AppleScript commands
+    to FileMaker if necessary."""
+    try:
+        return pyodbc.connect(**odbc_args)
+    except pyodbc.OperationalError:
+        open_filemaker()
+    except pyodbc.InterfaceError as err:
+        if path is not None:
+            open_database(path)
+        else:
+            msg = f'{odbc_args["DATABASE"]} unavailable and no path to database given.'
+            raise Exception(msg) from err
+    return try_connection(path, **odbc_args)
 
 def filemaker_status(app=None):
     """If FileMaker is not open, returns None. Otherwise returns a list
@@ -106,7 +121,7 @@ def close_filemaker(app=None, refresh=.1):
 class SourceTable:
     """Accesses a Sources table in a FileMaker Pro database."""
 
-    prior_status = None
+    #prior_status = None
 
     def __init__(self, connection):
         self.connection = connection
@@ -116,8 +131,8 @@ class SourceTable:
         """Closes the connection. Further attempts to access the database
         will raise exceptions."""
         self.connection.close()
-        if self.prior_status is None:
-            close_filemaker()
+        #if self.prior_status is None:
+        #    close_filemaker()
 
     def to_mob(self, record):
         """Accepts a record as a dictionary or row and returns a
