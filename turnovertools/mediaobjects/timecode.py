@@ -1,7 +1,7 @@
 """Child class for python-timecode package to resolve some issues
 and provide additional needed functionality."""
 
-from timecode import Timecode as TimecodeParent
+from timecode import Timecode as TimecodeParent, TimecodeError
 
 # Various representations of the same framerate
 FRAMERATE_TABLE = {'23.976': '23.98',
@@ -78,16 +78,48 @@ class Timecode(TimecodeParent):
     # parent object returns new object with result, which we need to
     # cast to current objects type
     def __add__(self, other):
-        result = super(Timecode, self).__add__(other)
-        return self.cast_to_current_type(result)
+        if isinstance(other, int):
+            frames = other
+        elif hasattr(other, 'frames'):
+            if self.framerate == other.framerate:
+                frames = other.frames
+            else:
+                msg = ('Illegal mixed framerate timecode arithmetic: ' +
+                       f'{self.framerate}, {other.framerate}')
+                raise TimecodeError(msg)
+        else:
+            msg = (f'Type {other.__class__.__name__} not supported ' +
+                   'for arithmetic.')
+            raise TimecodeError(msg)
+        frames += self.frames
+        result = type(self)(self.framerate, frames=frames)
+        result.f_framerate = self.f_framerate
+        return result
 
     def __sub__(self, other):
-        result = super(Timecode, self).__sub__(other)
-        return self.cast_to_current_type(result)
+        if isinstance(other, int):
+            frames = other
+        elif hasattr(other, 'frames'):
+            if self.framerate == other.framerate:
+                frames = other.frames
+            else:
+                msg = ('Illegal mixed framerate timecode arithmetic: ' +
+                       f'{self.framerate}, {other.framerate}')
+                raise TimecodeError(msg)
+        else:
+            msg = (f'Type {other.__class__.__name__} not supported ' +
+                   'for arithmetic.')
+            raise TimecodeError(msg)
+        frames = self.frames - frames
+        result = type(self)(self.framerate, frames=frames)
+        result.f_framerate = self.f_framerate
+        return result
 
     def __mul__(self, other):
         result = super(Timecode, self).__mul__(other)
-        return self.cast_to_current_type(result)
+        result = self.cast_to_current_type(result)
+        result.f_framerate = self.f_framerate
+        return result
 
     def offset(self, base):
         """Returns the timecode offset between self and base. Unlike
@@ -105,6 +137,7 @@ class Timecode(TimecodeParent):
                 frames = self.offset(Timecode(self.framerate, offset)).frames
         else:
             frames = self.frames
+        print(frames - 1, self.f_framerate)
         return (frames - 1) / self.f_framerate
 
     # parent class implements __floordiv__ as __div__, because it is
@@ -114,7 +147,9 @@ class Timecode(TimecodeParent):
         fractional remaining frames. (Maps to the __div__ method of
         the timecode.Timecode)"""
         result = self.__div__(other)
-        return self.cast_to_current_type(result)
+        result = self.cast_to_current_type(result)
+        result.f_framerate = self.f_framerate
+        return result
 
     @classmethod
     def cast_to_current_type(cls, obj):
@@ -139,8 +174,10 @@ class Timecode(TimecodeParent):
         'pal', '25', 'ntsc', '29.97', '30i', '3000/1001', '30', '59.94',
         '60i', '59.94'"""
         try:
-            if framerate == int(framerate):
-                framerate = int(framerate)
+            if float(framerate) == int(float(framerate)):
+                framerate = int(float(framerate))
+            else:
+                framerate = round(float(framerate), 3)
         except ValueError:
             pass
         try:

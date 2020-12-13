@@ -112,6 +112,36 @@ class TestAppleScript(unittest.TestCase):
         else:
             self.assertIsNone(sourcedb.filemaker_status())
 
+
+class TestEventDatabase(unittest.TestCase):
+    """We need to be able to generalize FileMaker access to other tables."""
+
+    def setUp(self):
+        self.test_file = get_source_db()
+        self.event_table = sourcedb.SourceTable(
+            sourcedb.connect(**self.test_file.kwargs),
+            table='Event', mob=mobs.VFXEvent, keyfield='PrimaryKey')
+
+    def tearDown(self):
+        self.event_table.close()
+
+    def test_get_event(self):
+        """Accesses a record in the event database and expects a VFXEvent
+        mob in return."""
+        test_mob = self.event_table['DA22C5DE-7E74-4FCA-A426-AF8D965289A4']
+        self.assertIsInstance(test_mob, mobs.VFXEvent)
+
+    def test_update_blob(self):
+        """Attempts to update a record with an image blob."""
+        with open('/Users/morgan/Desktop/source_with_tape_name.jpg', 'rb') as jpg:
+            self.event_table.update_container('DA22C5DE-7E74-4FCA-A426-AF8D965289A4',
+                                              'image', jpg.read(),
+                                              'source_with_tape_name.jpg')
+        image = self.event_table.get_blob('DA22C5DE-7E74-4FCA-A426-AF8D965289A4',
+                                          'image', 'JPEG')
+        self.assertIsNotNone(image)
+
+
 class TestReadDatabase(unittest.TestCase):
     """Test that pyodbc interface with FileMaker database is working
     correctly."""
@@ -152,9 +182,9 @@ class TestReadDatabase(unittest.TestCase):
     def test_update_container(self):
         """Updates an image into the image field of a source."""
         clip = self.source_table[self.test_file.inputs[0]]
-        with open('/Users/morgan/Desktop/source_with_tape_name.jpg', 'rb') as png:
+        with open('/Users/morgan/Desktop/source_with_tape_name.jpg', 'rb') as jpg:
             self.source_table.update_container(clip['reel'], 'image',
-                                               png.read(), 'source_with_tape_name.jpg')
+                                               jpg.read(), 'source_with_tape_name.jpg')
 
     def test_insert_image(self):
         """Uses the insert_image method to read and insert an image from a

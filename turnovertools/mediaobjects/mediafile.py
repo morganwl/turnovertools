@@ -6,6 +6,10 @@ import subprocess
 
 from turnovertools.mediaobjects import SourceClip, Timecode
 
+FFMPEG = '/usr/local/bin/ffmpeg'
+FFPROBE = '/usr/local/bin/ffprobe'
+FFPLAY = '/usr/local/bin/ffplay'
+
 def get_media_stream(streams):
     """Returns the metadata for the media stream in an MXF file,
     discarding data streams."""
@@ -81,20 +85,35 @@ class MediaFile(SourceClip):
             val = Timecode(self.src_framerate, val)
         self._poster_frame = val
 
+    def play(self, start_tc=None, end_tc=None):
+        """Executes an ffplay process, using marked tc if none is provided."""
+        if start_tc is not None:
+            start_tc = Timecode(self.src_framerate, start_tc)
+        if end_tc is not None:
+            end_tc = Timecode(self.src_framerate, end_tc)
+        start_tc = start_tc or self.mark_start_tc or self.src_start_tc
+        end_tc = end_tc or self.mark_end_tc or self.src_end_tc
+        start_second = str((start_tc - self.src_start_tc).frames / self.src_start_tc.f_framerate)
+        real_duration = str((end_tc - start_tc - 1).frames / end_tc.f_framerate)
+        subprocess.run((FFPLAY, '-ss', start_second, '-t',
+                        real_duration, self.filepath),
+                       capture_output=True)
+
     def thumbnail(self, start_second=None, interval=50, scale=(320, 180)):
         """Return a single thumbnail for the video, chosen from roughly
         the middle of the clip."""
         if self.poster_frame is not None:
             interval = 1
             start_second = self.poster_frame.real_seconds(self.src_start_tc)
-        # if no start_second is specified, choose from the middle of the clip
+        # if no start_second is specified, choose from middle of marked region
         if start_second is None:
-            interval_seconds = interval / float(self.src_framerate)
-            if self.seconds > interval_seconds:
-                start_second = self.seconds / 2 - interval_seconds / 2
+            if interval < self.mark_duration.frames:
+                start_offset = round(self.mark_duration.frames / 2 - interval / 2)
+                start_tc = (self.mark_start_tc or self.src_start_tc) + start_offset
             else:
-                start_second = self.seconds / 2
-                interval = round(self.seconds * float(self.src_framerate))
+                start_tc = (self.mark_start_tc or self.src_start_tc)
+                interval = self.mark_duration.frames
+            start_second = self.real_seconds(start_tc)
         # return the thumbnail, raising an exception if necessary
         try:
             return next(self.thumbnails(frames=1, start_second=start_second,
@@ -109,7 +128,7 @@ class MediaFile(SourceClip):
         filters = f'scale={scale[0]}:{scale[1]}'
         if interval > 1:
             filters += f',thumbnail={interval}'
-        args = ['ffmpeg']
+        args = [FFMPEG]
         if start_second:
             args.extend(('-ss', str(start_second)))
         args.extend(('-i', self.filepath, '-vcodec', 'mjpeg', '-vf',
@@ -124,7 +143,7 @@ class MediaFile(SourceClip):
     @classmethod
     def probe(cls, filepath):
         """Creates a MediaFile object by probing a videofile."""
-        args = ['ffprobe', '-of', 'json', '-show_format', '-show_streams', filepath]
+        args = [FFPROBE, '-of', 'json', '-show_format', '-show_streams', filepath]
         probe = subprocess.run(args, capture_output=True, check=False)
         data = json.loads(probe.stdout.decode('utf8'))
         mformat = data['format']
@@ -135,14 +154,16 @@ class MediaFile(SourceClip):
         # calculate src_end_timecode based on framerate and seconds
         framerate = stream.get('r_frame_rate')
         seconds = float(stream.get('duration'))
-        src_start_tc = Timecode(framerate,
-                                stream_tags.get('timecode', '00:00:00:00'))
+        timecode = (stream_tags.get('timecode') or tags.get('timecode') or
+                    '00:00:00:00')
+        src_start_tc = Timecode(framerate, timecode)
         try:
             framerate = float(framerate)
         except ValueError:
             fraction = framerate.split('/')
             framerate = float(fraction[0]) / float(fraction[1])
         src_end_tc = src_start_tc + round(seconds*framerate)
+        src_end_tc.f_framerate = src_start_tc.f_framerate
 
         # guess source_file vs tape
         reel = stream_tags.get('reel_name')
@@ -158,8 +179,9 @@ class MediaFile(SourceClip):
                          pix_fmt=stream.get('pix_fmt'),
                          source_size=(stream.get('width'), stream.get('height')),
                          seconds=seconds,
-                         src_start_tc=src_start_tc,
-                         src_end_tc=src_end_tc,
+                         src_framerate=framerate,
+                         src_start_tc=str(src_start_tc),
+                         src_end_tc=str(src_end_tc),
                          file_package_umid=stream_tags.get('file_package_umid').lower(),
                          reel_umid=stream_tags.get('reel_umid').lower(),
                          material_package_umid=tags.get('material_package_umid').lower(),

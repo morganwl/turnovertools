@@ -53,6 +53,7 @@ def main(reel, primary_key, table, sourcetable, mediadb=None):
         sources = [(reel, primary_key)]
 
     for source in sources:
+        print(source)
         insert_umid(source[0], source[1], table, sourcetable, mediadb)
 
 if __name__ == '__main__':

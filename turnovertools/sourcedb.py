@@ -118,13 +118,17 @@ def close_filemaker(app=None, refresh=.1):
     while filemaker_status() is not None:
         time.sleep(refresh)
 
+
 class SourceTable:
     """Accesses a Sources table in a FileMaker Pro database."""
 
     #prior_status = None
 
-    def __init__(self, connection):
+    def __init__(self, connection, table='Source', mob=None, keyfield='reel'):
         self.connection = connection
+        self.table = table
+        self.mob = mob
+        self.keyfield = keyfield
         self._fields = list(self._get_fields())
 
     def close(self):
@@ -144,18 +148,18 @@ class SourceTable:
     def update(self, reel, field, val, pk=False):
         """Changes the value of field in an an existing element
         in the table."""
-        keyfield = 'PrimaryKey' if pk else 'reel'
+        keyfield = 'PrimaryKey' if pk else self.keyfield
         with self.connection as c:
-            c.execute(f'UPDATE Source SET {field}=? WHERE {keyfield} = ?',
+            c.execute(f'UPDATE {self.table} SET {field}=? WHERE {keyfield} = ?',
                       (val, reel))
 
     def update_container(self, key, field, val, put_as, pk=False):
         """Updates a container object with an AS {filename} keyword. If
         pk is set, uses PrimaryKey to index records instead of the default
         reel."""
-        keyfield = 'PrimaryKey' if pk else 'reel'
+        keyfield = 'PrimaryKey' if pk else self.keyfield
         with self.connection as c:
-            sql = f"UPDATE Source SET {field}=? AS '{sanitize_name(put_as)}' " +\
+            sql = f"UPDATE {self.table} SET {field}=? AS '{sanitize_name(put_as)}' " +\
                   f"WHERE {keyfield}=?"
             logging.info("EXECUTED QUERY: %s with key %s", sql, key)
             c.execute(sql, (val, key))
@@ -167,36 +171,43 @@ class SourceTable:
         with open(filepath, 'rb') as image:
             self.update_container(reel, 'image', image.read(), name)
 
-    def get_blob(self, reel, field, blobtype):
+    def get_blob(self, key, field, blobtype):
         """Reads a binary string from a Container field."""
         with self.connection as c:
-            result = c.execute(f"SELECT GetAs({field}, '{blobtype}') " +
-                               "FROM Source WHERE reel=?", (reel,)).fetchone()
+            sql = (f"SELECT GetAs({field}, '{blobtype}') " +
+                   f"FROM {self.table} WHERE {self.keyfield}=?")
+            result = c.execute(sql, (key,)).fetchone()
         return result[0]
 
     def get_pk(self, key):
         """Get record by specific PrimaryKey instead of reel. Reels should
         be unique, but this might be necessary in some circumstances."""
         with self.connection as c:
-            query = c.execute(f'SELECT * FROM Source WHERE PrimaryKey=?', (key,))
+            query = c.execute(f'SELECT * FROM {self.table} WHERE PrimaryKey=?', (key,))
             result = query.fetchone()
         return self._row_to_dict(result)
 
     def _get_fields(self):
         with self.connection as c:
             query = c.execute('SELECT FieldName FROM FileMaker_Fields ' +
-                              'WHERE TableName=?', ('Source',))
+                              'WHERE TableName=?', (self.table,))
             fields = query.fetchall()
         for row in fields:
             yield row[0]
 
-    def __getitem__(self, reel):
+    def __getitem__(self, key):
         with self.connection as c:
-            query = c.execute(f'SELECT * FROM Source WHERE reel=?', (reel,))
+            sql = f'SELECT * FROM {self.table} WHERE {self.keyfield}=?'
+            query = c.execute(sql, (key,))
             rows = query.fetchmany(2)
         if len(rows) > 1:
-            raise KeyError(f'Multiple sources returned for {reel}')
-        return self._row_to_dict(rows[0])
+            raise KeyError(f'Multiple sources returned for {key}')
+        if len(rows) < 1:
+            return None
+        record = self._row_to_dict(rows[0])
+        if self.mob:
+            return self.mob(**record)
+        return record
 
     def _row_to_dict(self, row):
         record = dict()

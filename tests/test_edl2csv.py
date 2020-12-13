@@ -1,3 +1,5 @@
+# TO-DO: Fix bug importing empty EDLs
+
 import os
 import sys
 import tempfile

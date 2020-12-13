@@ -37,6 +37,14 @@ class SourceClip(mobs.Clip):
         self.mark_start_tc = mark_start_tc
         self.mark_end_tc = mark_end_tc
 
+    @property
+    def mark_duration(self):
+        """Returns the duration between mark_start_tc and mark_end_tc,
+        using src_in and src_out respectively if marks are not defined."""
+        mark_in = self.mark_start_tc or self.src_start_tc
+        mark_out = self.mark_end_tc or self.src_end_tc
+        return mark_out - mark_in
+
     @classmethod
     def dummy(cls, **kwargs):
         """Creates a dummy object with generic, properly formed values."""

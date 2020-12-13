@@ -82,6 +82,11 @@ class Clip(Mob):
         self.src_end_tc = Timecode(self.src_framerate, src_end_tc)
         self.clip_name = clip_name
 
+    def real_seconds(self, tc):
+        """Returns the time in seconds from start of clip to tc,
+        considering fractional framerates."""
+        return tc.real_seconds(self.src_start_tc)
+
     @classmethod
     def dummy(cls, **kwargs):
         """Creates a dummy object with generic, properly formed values."""
