@@ -8,6 +8,7 @@ for input into a FileMaker database.
 
 import csv
 import os
+import re
 import sys
 import tempfile
 
@@ -64,10 +65,14 @@ def read_vfx_locators(events):
     """
     for event in events:
         for loc in event.locators:
-            # we can identify locator components based on their fixed
-            # position in the string * LOC: HH:MM:SS:FF COLOR COMMENT
-            tc = loc[7:18]
-            color, comment = loc[19:].split(' ', 1)
+            # changed in 0.0.7, use regex to parse locator, to allow
+            # for EDL variations
+            match = re.match(
+                '\*\s*LOC:\s+(\d\d:\d\d:\d\d:\d\d)\s+(\w+)\s+(.*)',
+                loc)
+
+            tc, color, comment = match.group(1, 2, 3)
+
             if comment.startswith('VFX='):
                 fields = comment.split('=')
                 # Allow for missing fields in the middle by starting
@@ -77,7 +82,8 @@ def read_vfx_locators(events):
                 event.vfx_id = fields.pop(0).strip()
                 event.vfx_brief = ''
                 event.vfx_element = ''
-                event.frame_count_start = 1009
+                # TODO: Configurable frame_count_start
+                event.frame_count_start = 1017
                 if fields:
                     event.vfx_brief = fields.pop().strip()
                 if fields:
