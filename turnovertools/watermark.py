@@ -115,6 +115,8 @@ def write_video_with_watermark(videofile, watermark, outfile=None,
     if isinstance(start, Timecode):
         ss = range_to_real_dur(videofile.src_start_tc, start,
                                videofile.framerate)
+    else:
+        ss = start
         
     # convert end Timecode to a fractional duration
     if isinstance(end, Timecode):
@@ -214,6 +216,17 @@ class RecBurn(Watermark):
         }
     counters = {
         'rec_start_tc' : { 'rel_pos' : (.01, .9) }
+        }
+
+class RecBurnWatermark(Watermark):
+    displays = {
+        'sequence_name': { 'rel_pos': (.01, .01) },
+        'watermark': { 'rel_pos': (.5, .5),
+                       'align': ('center', 'top'),
+                       'color' : (255, 255, 255, 92) }
+        }
+    counters = {
+        'rec_start_tc' : { 'rel_pos': (.01, .9) }
         }
 
 if __name__ == '__main__':
