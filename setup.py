@@ -23,7 +23,7 @@ setuptools.setup(
     scripts=['scripts/ryglist.py', 'scripts/edl2csv.py',
              'scripts/vfxpull.py', 'scripts/vfxreference.py',
              'scripts/ale2csv.py', 'scripts/insert_umid.py',
-             'scripts/dbplay.py'],
+             'scripts/dbplay.py', 'scripts/watermark.py'],
     package_data={'turnovertools': ['adapters/translation_tables/*.csv']},
     packages=setuptools.find_packages(),
     classifiers=[
