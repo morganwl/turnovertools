@@ -8,7 +8,6 @@ from timecode import Timecode
 
 from turnovertools import fftools, vfxlist, watermark, Config
 
-
 def read_csv(inputfile):
     rows = list()
     with open(inputfile, newline='') as fh:
@@ -29,6 +28,7 @@ def index_videos(basedir):
                 video_index[basename] = os.path.join(dirpath, fn)
     return video_index
 
+
 def main(csvfile, mediadir, outputdir):
     # mock up desired output first!
     mock_dir = '/Users/morgan/private_test_files/turnovertools/vfx/control_samples/LG_VFX_R2_REFERENCE'
@@ -42,7 +42,7 @@ def main(csvfile, mediadir, outputdir):
         outfile = os.path.join(outputdir, vfx['vfx_id'] + '.mov')
         vfx['rec_start_tc'] = Timecode(vf.framerate, vfx['rec_start_tc'])
         vfx['rec_end_tc'] = Timecode(vf.framerate, vfx['rec_end_tc'])
-        vfx['frame_count_start'] = int(vfx['frame_count_start'])
+        vfx['frame_count_start'] = int('frame_count_start'])
         start = vfx['rec_start_tc']
         end = vfx['rec_end_tc']
         wm = watermark.VFXReference(**vfx)
