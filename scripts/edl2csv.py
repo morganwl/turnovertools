@@ -24,7 +24,8 @@ class Config:
                       'rec_end_tc', 'src_start_tc', 'src_end_tc',
                       'src_framerate', 'track', 'sequence_name', 'vfx_id',
                       'vfx_element', 'vfx_brief', 'vfx_loc_tc',
-                      'vfx_loc_color', 'frame_count_start']
+                      'vfx_loc_color', 'frame_count_start', 'asc_sop',
+                      'asc_sat']
 
 def change_ext(filename, ext):
     """Replaces the extension of filename with ext."""

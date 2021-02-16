@@ -41,7 +41,9 @@ class EDLEvent(mediaobject.Event, EDLObject):
                   'rec_start_tc' : 'rec_start_tc',
                   'rec_end_tc' : 'rec_end_tc',
                   'event_num' : 'num',
-                  'track' : 'track', }
+                  'track' : 'track',
+                  'asc_sop': 'asc_sop',
+                  'asc_sat': 'asc_sat'}
     __wraps_type__ = edl.Event
 
     def __init__(self, seq_start, data=None, **kwargs):
@@ -77,6 +79,18 @@ class EDLEvent(mediaobject.Event, EDLObject):
             if c.startswith('* LOC:'):
                 locators.append(c)
         return locators
+
+    @property
+    def asc_sop(self):
+        for c in self.comments:
+            if c.startswith('* ASC_SOP'):
+                return c[c.find('('):]
+
+    @property
+    def asc_sat(self):
+        for c in self.comments:
+            if c.startswith('* ASC_SAT'):
+                return c.split('ASC_SAT ', 1)[1]
 
     def src_tc_at(self, rec_tc):
         offset = Timecode(self.rec_start_tc.framerate, rec_tc) - self.rec_start_tc
