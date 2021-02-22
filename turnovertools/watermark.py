@@ -52,7 +52,6 @@ def draw_fftext(text, origin=(5,5), color=(255,255,255,255),
         kwargs['timecode'] = str(counter).replace(':', ':')
         kwargs['rate'] = 24
     elif counter is not None and int(counter) == float(counter):
-        print(counter)
         kwargs['text'] = '%{frame_num}'
         kwargs['start_number'] = counter
     return kwargs
@@ -185,10 +184,9 @@ def write_watermarks(videofile, watermarks, outfile=None,
     running_dur = dur
     stream = ffmpeg.input('pipe:', framerate=videofile.framerate)
     audio = ffmpeg.input(videofile.mediapath, ss=str(ss), t=str(dur))
-    stream = ffmpeg.output(stream, audio, outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate)
-    print(stream.compile())
+    stream = ffmpeg.output(stream, audio, outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate, loglevel='error')
     out_process = ffmpeg.run_async(stream, pipe_stdin=True,
-                                   overwrite_output=True)
+                                   overwrite_output=True,)
     for wm in watermarks:
         if wm.dur is not None:
             dur = wm.dur
@@ -236,7 +234,6 @@ def stream_video_with_watermark_text(videofile, watermark, outfile=None,
     else:
         stream = build_ffmpeg_output(stream, 'pipe:', dur,
                                      vcodec, acodec='none', f='rawvideo')
-    print(stream.compile())
     process = ffmpeg.run_async(stream, pipe_stdout=True, pipe_stderr=True)
     return process
 
