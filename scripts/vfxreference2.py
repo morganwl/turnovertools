@@ -10,7 +10,10 @@ from turnovertools import fftools, vfxlist, watermark, Config
 VENDOR = 'FrameStore'
 PROPERTY = 'Property of ABC Signature Studios'
 
-VFXRow = namedtuple('VFXRow', ('vfx_id', 'vfx_brief', 'rec_start_tc', 'rec_end_tc', 'frame_count_start', 'context_start', 'context_end', 'videofile'))
+VFXRow = namedtuple('VFXRow', ('vfx_id', 'vfx_brief', 'rec_start_tc',
+                               'rec_end_tc', 'frame_count_start',
+                               'context_start', 'context_end', 
+                               'videofile'))
 
 def range_to_real_dur(start_tc, end_tc, framerate):
     frames = (end_tc - start_tc).frames
@@ -18,7 +21,6 @@ def range_to_real_dur(start_tc, end_tc, framerate):
     return frames / framerate
 
 def read_csv(inputfile):
-    print(inputfile)
     rows = list()
     with open(inputfile, newline='') as fh:
         reader = csv.reader(fh)
@@ -37,12 +39,14 @@ def build_batches(vfx, framerate):
         shot['rec_end_tc'] = Timecode(framerate, shot['rec_end_tc'])
         shot['context_start'] = Timecode(framerate, shot['context_start'])
         shot['context_end'] = Timecode(framerate, shot['context_end'])
+
         if wm:
             b['watermarks'].append(wm)
             # add filler between VFX shots
+            if shot['context_start'].frames <= b['end'].frames:
+                b['end'] = shot['context_end']
+                b['name'] = shot['vfx_id'].rsplit('_', 1)[0]
             if wm.rec_end_tc != shot['rec_start_tc']:
-                if shot['context_start'].frames < b['end'].frames:
-                    b['end'] = shot['context_end']
                 if b['end'] == shot['context_end']:
                     b['watermarks'].append(watermark.RecBurnWatermark(
                             vendor=VENDOR,
@@ -63,7 +67,7 @@ def build_batches(vfx, framerate):
             b['start'] = shot['context_start']
             b['end'] = shot['context_end']
             b['videofile'] = fftools.probe_clip(shot['videofile'])
-            b['name'] = shot['vfx_id'].rsplit('_', 1)[0]
+            b['name'] = shot['vfx_id']
             b['watermarks'] = list()
             b['watermarks'].append(watermark.RecBurnWatermark(
                             vendor=VENDOR,
@@ -80,8 +84,9 @@ def build_batches(vfx, framerate):
                     vendor=VENDOR,
                     property=PROPERTY,
                     rec_start_tc=wm.rec_end_tc,
-                    rec_end_tc=['end'],
+                    rec_end_tc=b['end'],
                     sequence_name=b['name']))
+        batches.append(b)
     return batches
     
 def main(vfxlist, outdir):
