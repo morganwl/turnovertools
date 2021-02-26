@@ -184,7 +184,7 @@ def write_watermarks(videofile, watermarks, outfile=None,
     running_dur = dur
     stream = ffmpeg.input('pipe:', framerate=videofile.framerate)
     audio = ffmpeg.input(videofile.mediapath, ss=str(ss), t=str(dur))
-    stream = ffmpeg.output(stream, audio, outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate, loglevel='error')
+    stream = ffmpeg.output(stream['v'], audio['a'], outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate, loglevel='error')
     out_process = ffmpeg.run_async(stream, pipe_stdin=True,
                                    overwrite_output=True,)
     for wm in watermarks:
