@@ -7,7 +7,7 @@ def main(marker_file):
         reader = csv.reader(fh)
         last_marker = ('', '')
         for row in reader:
-            marker = (row[0], row[1], f'V{row[2]}', row[3], f'VFX={row[4]}={row[5]}={row[6]}', '1')
+            marker = (row[0], row[1], f'V{row[2]}', row[3], row[4], '1')
             if last_marker != (row[1], row[2]):
                 markers.append('\t'.join(marker))
             last_marker = (row[1], row[2])
