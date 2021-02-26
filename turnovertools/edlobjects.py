@@ -93,5 +93,8 @@ class EDLEvent(mediaobject.Event, EDLObject):
                 return c.split('ASC_SAT ', 1)[1]
 
     def src_tc_at(self, rec_tc):
-        offset = Timecode(self.rec_start_tc.framerate, rec_tc) - self.rec_start_tc
-        return self.src_start_tc + int(offset.frames * self.speed)
+        if str(self.rec_start_tc) != rec_tc:
+            offset = Timecode(self.rec_start_tc.framerate, rec_tc) - self.rec_start_tc
+            return self.src_start_tc + int(offset.frames * self.speed)
+        else:
+            return self.src_start_tc
