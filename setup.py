@@ -25,7 +25,7 @@ setuptools.setup(
              'scripts/ale2csv.py', 'scripts/insert_umid.py',
              'scripts/dbplay.py', 'scripts/watermark.py',
              'scripts/vfxreference2.py', 'scripts/csv2markers.py',
-             'scripts/csv2ale.py'],
+             'scripts/csv2ale.py', 'scripts/prepsubmission.py'],
     package_data={'turnovertools': ['adapters/translation_tables/*.csv']},
     packages=setuptools.find_packages(),
     classifiers=[
