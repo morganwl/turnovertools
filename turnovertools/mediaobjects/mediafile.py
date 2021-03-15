@@ -173,6 +173,19 @@ class MediaFile(SourceClip):
             source_file = reel
         else:
             tape = reel
+        if stream_tags.get('file_package_umid') is not None:
+            file_package_umid = stream_tags.get('file_package_umid').lower()
+        else:
+            file_package_umid = None
+        if stream_tags.get('reel_umid') is not None:
+            reel_umid = stream_tags.get('reel_umid').lower()
+        else:
+            reel_umid = None
+            
+        if stream_tags.get('material_package_umid') is not None:
+            material_package_umid = tags.get('material_package_umid').lower()
+        else:
+            material_package_umid = None
 
         return MediaFile(mediatype=stream.get('codec_type'),
                          clip_name=tags.get('material_package_name'),
@@ -182,9 +195,9 @@ class MediaFile(SourceClip):
                          src_framerate=framerate,
                          src_start_tc=str(src_start_tc),
                          src_end_tc=str(src_end_tc),
-                         file_package_umid=stream_tags.get('file_package_umid').lower(),
-                         reel_umid=stream_tags.get('reel_umid').lower(),
-                         material_package_umid=tags.get('material_package_umid').lower(),
+                         file_package_umid=file_package_umid,
+                         reel_umid=reel_umid,
+                         material_package_umid=material_package_umid,
                          track_name=stream_tags.get('track_name'),
                          format_name=mformat.get('format_name'),
                          bitrate=mformat.get('bit_rate'),
