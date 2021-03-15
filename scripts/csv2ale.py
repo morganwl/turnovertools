@@ -2,7 +2,7 @@ from collections import namedtuple
 import csv
 import sys
 
-ALERow = namedtuple('ALERow', ('Name', 'Tape', 'Frame_Count_Start', 'Start', 'End', 'Tracks', 'VFX_ID'))
+ALERow = namedtuple('ALERow', ('Name', 'Tape', 'source_file', 'Frame_Count_Start', 'Start', 'End', 'Tracks', 'VFX_ID', 'In', 'Out', 'aux_tc', 'notes', 'Batch', 'Date'))
 
 ALE_HEADER_LINES = [
     'Heading',
@@ -13,7 +13,7 @@ ALE_HEADER_LINES = [
     'FPS\t23.976',
     '',
     'Column']
-ALE_COLUMN_ROWS = ['Name', 'Tape', 'Frame Count Start', 'Start', 'End', 'Tracks', 'VFX_ID']
+ALE_COLUMN_ROWS = ['Name', 'Tape', 'Source File', 'Frame Count Start', 'Start', 'End', 'Tracks', 'VFX_ID', 'Mark IN', 'Mark OUT', 'Auxiliary TC1', 'Notes for Edit', 'Batch', 'Date']
 
 def read_csv(inputfile):
     rows = list()
