@@ -1,9 +1,25 @@
 # turnovertools
-tools for processing Avid Media Composer turnovers
+tools for assisting Assistant Film Editors in processing Avid Media
+Composer turnovers. Many scripts are designed to integrate with
+FileMaker Pro databases, both by inputting and outputting .csv files,
+and also by direct SQL queries using the ODBC protocol. A functional
+installation of ffmpeg and ffprobe is required. Some scripts will not
+work without a compatible FileMaker Pro database, but most will.
 
-Development is erratic, chasing around to follow actual tasks on the job.
+Development of this repo is driven by work needs. The demands of the
+job (Assistant Film Editing) often requires that I move on to other
+tasks once a particular function can be performed satisfactorily. Over
+time, I have tried to refine functionality, add error checking and
+support for corner cases, and migrate functionality into generalized
+objects that can be repurposed for future tasks.
+
+Many tests are written using inputs from actual film and television
+projects. These inputs are proprietary and not included in the
+repository. Many tests will not run successfully without them.
 
 ## Changelog
+
+### 0.0.7 01.16.2021
 
 ### 0.0.6 05.06.2020
 
