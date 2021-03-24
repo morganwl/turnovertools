@@ -12,7 +12,7 @@ PROPERTY = 'Property of ABC Signature Studios'
 
 VFXRow = namedtuple('VFXRow', ('vfx_id', 'vfx_brief', 'rec_start_tc',
                                'rec_end_tc', 'frame_count_start',
-                               'context_start', 'context_end', 
+                               'context_start', 'context_end', 'vendor',
                                'videofile'))
 
 def range_to_real_dur(start_tc, end_tc, framerate):
@@ -49,14 +49,14 @@ def build_batches(vfx, framerate):
             if wm.rec_end_tc != shot['rec_start_tc']:
                 if b['end'] == shot['context_end']:
                     b['watermarks'].append(watermark.RecBurnWatermark(
-                            vendor=VENDOR,
+                            vendor=shot['vendor'],
                             property=PROPERTY,
                             sequence_name=b['name'],
                             rec_start_tc=wm.rec_end_tc,
                             rec_end_tc=shot['rec_start_tc']))
                 else:
                     b['watermarks'].append(watermark.RecBurnWatermark(
-                            vendor=VENDOR,
+                            vendor=shot['vendor'],
                             property=PROPERTY,
                             rec_start_tc=wm.rec_end_tc,
                             sequence_name=b['name'],
@@ -70,18 +70,18 @@ def build_batches(vfx, framerate):
             b['name'] = shot['vfx_id']
             b['watermarks'] = list()
             b['watermarks'].append(watermark.RecBurnWatermark(
-                            vendor=VENDOR,
+                            vendor=shot['vendor'],
                             property=PROPERTY,
                             sequence_name=b['name'],
                             rec_start_tc=b['start'],
                             rec_end_tc=shot['rec_start_tc']))
-        wm = watermark.VFXReference(**shot, vendor=VENDOR, property=PROPERTY)
+        wm = watermark.VFXReference(**shot, property=PROPERTY)
 
     if wm:
         b['watermarks'].append(wm)
         if b['end'] != wm.rec_end_tc:
             b['watermarks'].append(watermark.RecBurnWatermark(
-                    vendor=VENDOR,
+                    vendor=shot['vendor'],
                     property=PROPERTY,
                     rec_start_tc=wm.rec_end_tc,
                     rec_end_tc=b['end'],
