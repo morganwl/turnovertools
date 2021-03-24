@@ -1,3 +1,21 @@
+"""
+Inputs a csv file and outputs a valid ALE file (Avid Log Exchange)
+for import into Avid Media Composer.
+
+usage: csv2ale.py <input.csv> [output file] [columns]
+
+If no output file is specified, the path of the inputfile, plus
+'.ale' is used.
+
+TO-DO: Implement columns argument for determining desired ALE 
+       columns and order at runtime.
+TO-DO: Detect header row in .csv. (FileMaker does not output csvs
+       with header row, but other workflows do.) csv header should
+       be overridden if columns are specified on command line.
+TO-DO: Use mediaobject classes for additional functionality and
+       error checking.
+"""
+
 from collections import namedtuple
 import csv
 import sys
@@ -24,7 +42,7 @@ def read_csv(inputfile):
     return rows
 
 
-def main(inputfile, outputfile=None):
+def main(inputfile, outputfile=None, columns=None):
     pulls = read_csv(inputfile)
     if outputfile is None:
         outputfile = inputfile + '.ale'
