@@ -184,7 +184,7 @@ def write_watermarks(videofile, watermarks, outfile=None,
     running_dur = dur
     stream = ffmpeg.input('pipe:', framerate=videofile.framerate)
     audio = ffmpeg.input(videofile.mediapath, ss=str(ss), t=str(dur))
-    stream = ffmpeg.output(stream['v'], audio['a'], outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate, loglevel='error')
+    stream = ffmpeg.output(stream['v'], audio['a'], outfile, vcodec='copy', acodec='pcm_s16le', r=videofile.framerate, loglevel='error', timecode=str(start))
     out_process = ffmpeg.run_async(stream, pipe_stdin=True,
                                    overwrite_output=True,)
     for wm in watermarks:
@@ -196,7 +196,11 @@ def write_watermarks(videofile, watermarks, outfile=None,
             dur = running_dur
         wm_process = stream_video_with_watermark_text(videofile, wm, start=ss, duration=dur, scale=scale,
                                                       vcodec=vcodec)
-        out_process.stdin.write(wm_process.stdout.read())
+        try:
+            out_process.stdin.write(wm_process.stdout.read())
+        except BrokenPipeError as e:
+            message = f'Error writing {wm} at {wm.rec_start_tc}'
+            raise Exception(message) from e
         wm_process.stdout.close()
         ss = ss + dur
         running_dur -= dur
@@ -379,12 +383,17 @@ class Watermark:
             filters.append(draw_fftext('', counter=getattr(self, c), **kwargs))
         return filters
 
+    def __repr__(self):
+        displays = [(field, getattr(self, field)) for field in self.displays]
+        counters = [(field, getattr(self, field)) for field in self.counters]
+        return f'<{type(self).__name__} keywords={displays} counters={counters} rec_end_tc=self.rec_end_tc>'
+
 
 class VFXReference(Watermark):
     displays = {
         'vfx_id' : {'rel_pos' : (.01, .01), 'box_fill': (0,0,0,64),
                     'font_size': 48},
-        'vfx_brief' : {'rel_pos': (.5, .01),
+        'vfx_brief' : {'rel_pos': (.27, .01),
                        'align': ('center', 'top'),
                        'box_fill': (0,0,0,64),
                        'font_size': 48},
