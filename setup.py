@@ -26,7 +26,7 @@ setuptools.setup(
              'scripts/dbplay.py', 'scripts/watermark.py',
              'scripts/vfxreference2.py', 'scripts/csv2markers.py',
              'scripts/csv2ale.py', 'scripts/prepsubmission.py',
-             'scripts/files2csv.py'],
+             'scripts/files2csv.py', 'scripts/simedl.py'],
     package_data={'turnovertools': ['adapters/translation_tables/*.csv']},
     packages=setuptools.find_packages(),
     classifiers=[
