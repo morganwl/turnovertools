@@ -14,7 +14,7 @@ import sys
 
 from turnovertools.mediaobjects import MediaFile
 
-ROWS = ('Filename', 'src_start_tc', 'src_end_tc')
+ROWS = ('Filename', 'src_start_tc', 'src_end_tc', 'Format')
 
 def get_videos(dir):
     files = os.scandir(dir)
@@ -25,7 +25,7 @@ def get_videos(dir):
 
 def video_to_row(filename, filepath):
     clip = MediaFile.probe(filepath)
-    return(filename, clip.src_start_tc, clip.src_end_tc)
+    return(filename, clip.src_start_tc, clip.src_end_tc, 'QT DNxHD')
     
 def main(inputdir):
     if inputdir.endswith('/'):
