@@ -37,12 +37,19 @@ ALE_HEADER_LINES = [
     '',
     'Column']
 ALE_COLUMNS = ['Name', 'Tape', 'Source File', 'Frame Count Start', 'Start', 'End', 'Tracks', 'VFX_ID', 'Mark IN', 'Mark OUT', 'Auxiliary TC1', 'Notes for Edit', 'Batch', 'Date']
+CUSTOM_COLUMN_MAX_LENGTH = 250 # custom columns with more than the
+                               # allowed number of characters will
+                               # crash Avid on import
 
 def read_csv(inputfile):
     rows = list()
     with open(inputfile, newline='') as fh:
         reader = csv.reader(fh)
         for row in reader:
+            # truncate columns that exceed max-length
+            for i, col in enumerate(row):
+                if len(col) > CUSTOM_COLUMN_MAX_LENGTH:
+                    row[i] = col[:CUSTOM_COLUMN_MAX_LENGTH - 3] + '...'
             rows.append(row)
     return rows
 
