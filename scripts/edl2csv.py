@@ -27,6 +27,17 @@ class Config:
                       'vfx_loc_color', 'frame_count_start', 'asc_sop',
                       'asc_sat']
 
+def capitalize_sentences(s):
+    s = s.lower()
+    buffer = list()
+    start = 0
+    for i, char in enumerate(s):
+        if char in ('.', '?', '!'):
+            buffer.append(s[start:i+1].capitalize())
+            start = i+1
+    buffer.append(s[start:].capitalize())
+    return ''.join(buffer)
+    
 def change_ext(filename, ext):
     """Replaces the extension of filename with ext."""
     return os.path.splitext(filename)[0] + ext
@@ -86,7 +97,7 @@ def read_vfx_locators(events):
                 # TODO: Configurable frame_count_start
                 event.frame_count_start = 1017
                 if fields:
-                    event.vfx_brief = fields.pop().strip()
+                    event.vfx_brief = capitalize_sentences(fields.pop().strip())
                 if fields:
                     event.vfx_element = fields.pop().strip()
                 event.vfx_loc_tc = event.src_tc_at(tc)
