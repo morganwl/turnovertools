@@ -35,7 +35,7 @@ def main(inputfile, outputfile=None):
         outputfile = filehandle.name
     else:
         filehandle = open(outputfile, 'wt', newline='')
-    avidlog.write_csv(filehandle, columns=GoogleSourceClip.standard_attrs())
+    avidlog.write_csv(filehandle, columns=GoogleSourceClip.standard_attrs() + ['project'])
     filehandle.close()
     print(outputfile)
 
