@@ -20,3 +20,5 @@ media_file_path,
 link,Link
 duration,Duration
 clip_comments,Comments
+shoot_date,Shoot Date
+project,Project

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+A#!/usr/bin/env python3
 
 """Reads an EDL of a cut and attempts to construct still images, video
 reference and metadata spreadsheet for Google RYG (Red,Yellow,Green)
@@ -65,12 +65,15 @@ def import_edl(edl_file):
 
 def remove_filler(events):
     """Removes blank events."""
-    for e in events:
-        if e.reel is None:
-            events.remove(e)
+    for event in events:
+        if event.reel is None:
+            events.remove(event)
             continue
 
 def process_events(events, ale_file=None, footage_tracker=None):
+    """Accepts a list of events iterates each event through a series
+    of Matchers, adjusting them as appropriate. Optionally pulls
+    metadata from an ALE or a footage tracker csv."""
     matchers = Config.MATCHERS
     if footage_tracker:
         matchers.insert(0, linkfinder.FootageTrackerMatcher(footage_tracker))
@@ -90,6 +93,7 @@ def process_events(events, ale_file=None, footage_tracker=None):
         i += 1
 
 def output_csv(events, columns, csvfile):
+    """Outputs events as a csv file containing specified columns."""
     writer = csv.writer(csvfile)
 
     writer.writerow(csvobjects.CSVEvent.convertColumns(columns))
@@ -105,6 +109,7 @@ def output_csv(events, columns, csvfile):
         writer.writerow(row)
 
 def jpeg_from_pipe(process):
+    """Reads STDOUT of process and yields JPEG images."""
     buffer = []
     dangling_code = False # in case an end code straddles two chunks
     chunk = process.stdout.read()
@@ -121,17 +126,15 @@ def jpeg_from_pipe(process):
             # if we found an end_code, flush the buffer as an image
             if end_code > 1:
                 buffer.append(chunk[:end_code])
-                yield(b''.join(buffer))
+                yield b''.join(buffer)
 
                 buffer = []
                 chunk = chunk[end_code:]
                 if len(chunk) > 2 and chunk.find(b'\xff\xd8\xff') != 0:
                     raise Exception('Unexpected byte-string', chunk[0:3])
             else:
-                if len(chunk) and chunk[-1] == b'x\ff':
-                    dangling_code = True
-                else:
-                    dangling_code = False
+                dangling_code = bool(len(chunk) and
+                                     chunk[-1] == b'x\ff')
                 buffer.append(chunk)
         chunk = process.stdout.read()
 
