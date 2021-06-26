@@ -18,7 +18,9 @@ ROWS = ('src_file', 'src_path', 'src_start_tc', 'src_end_tc',
 def get_videos(dir):
     files = os.scandir(dir)
     for file in files:
-        if file.name.endswith('.mov') or file.name.endswith('.mp4'):
+        # Replace with a lookup table of media file extensions, or bypass file
+        # extension altogether and do a trial probe (slower)
+        if file.name.endswith('.mov') or file.name.endswith('.mp4') or file.name.endswith('.mxf'):
             yield (file.name, file.path)
     files.close()
 
