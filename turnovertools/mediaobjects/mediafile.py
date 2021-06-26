@@ -18,6 +18,8 @@ def get_media_stream(streams):
         # skip 'data' streams that provide info about related mxf files
         if stream['codec_type'] == 'data':
             continue
+        if stream['codec_type'] == 'audio':
+            continue
         if found:
             raise UserWarning('Expected only one media stream per MXF.')
         found = stream
