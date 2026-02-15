@@ -36,7 +36,7 @@ setuptools.setup(
     install_requires=['timecode',
                       'edl',
                       'ffmpeg-python',
-                      'future==0.18.2',
+                      'future==1.0.0',
                       'python-dateutil'],
     classifiers=[
         "Programming Language :: Python :: 3",
